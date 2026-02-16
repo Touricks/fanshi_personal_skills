@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}} - Study Notes</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #dbeafe;
+            --secondary: #7c3aed;
+            --secondary-light: #ede9fe;
+            --success: #059669;
+            --success-light: #d1fae5;
+            --warning: #d97706;
+            --warning-light: #fef3c7;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-700: #374151;
+            --gray-900: #111827;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-700);
+            background: var(--gray-50);
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: var(--gray-900);
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        h2 {
+            color: var(--primary);
+            margin: 1.5rem 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h3 {
+            color: var(--secondary);
+            margin: 1rem 0 0.5rem;
+        }
+
+        /* Navigation */
+        nav.toc {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        nav.toc h2 { margin: 0 0 0.5rem; font-size: 1rem; }
+        nav.toc ul { list-style: none; }
+        nav.toc li { margin: 0.25rem 0; }
+        nav.toc a { color: var(--primary); text-decoration: none; }
+        nav.toc a:hover { text-decoration: underline; }
+
+        /* Sections */
+        section {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Collapsible */
+        details {
+            border: 1px solid var(--gray-200);
+            border-radius: 6px;
+            margin: 0.75rem 0;
+        }
+
+        details > summary {
+            padding: 0.75rem 1rem;
+            background: var(--gray-100);
+            cursor: pointer;
+            font-weight: 500;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        details > summary::before {
+            content: '▶';
+            font-size: 0.75rem;
+            transition: transform 0.2s;
+        }
+
+        details[open] > summary::before {
+            transform: rotate(90deg);
+        }
+
+        details > summary::-webkit-details-marker { display: none; }
+
+        details > div {
+            padding: 1rem;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        /* Key Concepts */
+        .concept {
+            background: var(--primary-light);
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            margin: 0.75rem 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .concept strong {
+            color: var(--primary);
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Problem-Solution */
+        .problem-solution {
+            background: var(--secondary-light);
+            border-left: 4px solid var(--secondary);
+            padding: 1rem;
+            margin: 0.75rem 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .problem-solution .problem {
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        .problem-solution .solution {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed var(--secondary);
+        }
+
+        /* Examples */
+        .example {
+            background: var(--success-light);
+            border-left: 4px solid var(--success);
+            padding: 1rem;
+            margin: 0.75rem 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .example::before {
+            content: '📝 Example: ';
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        /* Quiz */
+        .quiz {
+            background: var(--warning-light);
+            border: 2px solid var(--warning);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .quiz-question {
+            font-weight: 600;
+            color: var(--warning);
+            margin-bottom: 0.5rem;
+        }
+
+        .quiz-question::before {
+            content: '❓ ';
+        }
+
+        .quiz details {
+            border-color: var(--warning);
+            margin-top: 0.5rem;
+        }
+
+        .quiz details summary {
+            background: white;
+            color: var(--warning);
+        }
+
+        /* Important Notes */
+        .important {
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+            padding: 1rem;
+            margin: 0.75rem 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .important::before {
+            content: '⚠️ Important: ';
+            font-weight: 600;
+            color: #dc2626;
+        }
+
+        /* Lists */
+        ul, ol {
+            margin: 0.5rem 0 0.5rem 1.5rem;
+        }
+
+        li { margin: 0.25rem 0; }
+
+        /* Code */
+        code {
+            background: var(--gray-100);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: var(--gray-900);
+            color: #f9fafb;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 0.75rem 0;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        /* Summary box */
+        .summary {
+            background: linear-gradient(135deg, var(--primary-light), var(--secondary-light));
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .summary h3 {
+            color: var(--primary);
+            margin-top: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            body { padding: 0; background: white; }
+            section { break-inside: avoid; border: 1px solid #ddd; }
+            details { break-inside: avoid; }
+            details[open] > div { display: block !important; }
+            .quiz details > div { display: block !important; }
+        }
+    </style>
+</head>
+<body>
+    <h1>{{TITLE}}</h1>
+
+    <nav class="toc">
+        <h2>📚 Table of Contents</h2>
+        <ul>
+            {{TOC}}
+        </ul>
+    </nav>
+
+    {{CONTENT}}
+
+</body>
+</html>
