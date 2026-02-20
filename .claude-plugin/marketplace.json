@@ -7,27 +7,7 @@
     {
       "name": "personal-tools",
       "description": "Fanshi's personal skill collection: ML paper writing, scientific slides, LaTeX posters, humanizer, web extraction, and more.",
-      "source": "./",
-      "skills": [
-        "./skills/claude-d3js-skill",
-        "./skills/docx",
-        "./skills/humanizer",
-        "./skills/humanizer-zh",
-        "./skills/langchain-architecture",
-        "./skills/langgraph",
-        "./skills/latex-posters",
-        "./skills/ml-paper-writing",
-        "./skills/pdf",
-        "./skills/ppt-generator",
-        "./skills/pptx",
-        "./skills/scientific-slides",
-        "./skills/skill-creator",
-        "./skills/start",
-        "./skills/study-notes-generator",
-        "./skills/tailored-resume-generator",
-        "./skills/web-extractor",
-        "./skills/xlsx"
-      ]
+      "source": "./"
     }
   ]
 }
