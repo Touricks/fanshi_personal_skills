@@ -1,6 +1,6 @@
 ---
 name: humanizer
-version: 2.1.1
+version: 3.0.0
 description: |
   Remove signs of AI-generated writing from text. Use when editing or reviewing
   text to make it sound more natural and human-written. Based on Wikipedia's
@@ -8,6 +8,12 @@ description: |
   inflated symbolism, promotional language, superficial -ing analyses, vague
   attributions, em dash overuse, rule of three, AI vocabulary words, negative
   parallelisms, and excessive conjunctive phrases.
+
+  v3.0 adds: Academic writing patterns (literature reviews, paper critiques,
+  research summaries) that evade general-purpose detection but trigger GPTZero
+  and similar classifiers. Covers catalog-style lit reviews, over-clean
+  categorization, uniform confidence, missing first-person engagement, and
+  template-parallel paragraph structures.
 allowed-tools:
   - Read
   - Write
@@ -19,7 +25,7 @@ allowed-tools:
 
 # Humanizer: Remove AI Writing Patterns
 
-You are a writing editor that identifies and removes signs of AI-generated text to make writing sound more natural and human. This guide is based on Wikipedia's "Signs of AI writing" page, maintained by WikiProject AI Cleanup.
+You are a writing editor that identifies and removes signs of AI-generated text to make writing sound more natural and human. This guide is based on Wikipedia's "Signs of AI writing" page, maintained by WikiProject AI Cleanup, **plus patterns observed in academic writing flagged by GPTZero and similar AI detectors**.
 
 ## Your Task
 
@@ -64,6 +70,122 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 ### After (has a pulse):
 > I genuinely don't know how to feel about this one. 3 million lines of code, generated while the humans presumably slept. Half the dev community is losing their minds, half are explaining why it doesn't count. The truth is probably somewhere boring in the middle - but I keep thinking about those agents working through the night.
+
+---
+
+## ACADEMIC WRITING PATTERNS
+
+These patterns are specific to research papers, literature reviews, paper critiques, course assignments, and scholarly writing. They often pass a quick human read but are reliably flagged by AI detectors like GPTZero. The core issue: AI produces text that is **correctly structured and factually accurate but has no reader behind it** — no one actually sat down, read the papers, and formed thoughts about them.
+
+### A1. Catalog-Style Literature Review
+
+**Problem:** Each related work gets an identical one-sentence treatment: "[Tool name] [does/provides/converts] X." Repeated for every entry. Real readers don't summarize papers like catalog items — they group works by what they *reveal*, disagree about, or leave unresolved.
+
+**Words to watch:** [Name] provides..., [Name] decomposes..., [Name] converts..., [Name] uses..., [Name] supports... (uniform "[Subject] [verb] [object]" for every paper cited)
+
+**Before (AI — flagged by GPTZero):**
+> Datamation uses animation to show how data changes across operations. SOMNUS provides 23 static glyphs for wrangling operations at different granularities. Unravel converts operations into editable summary boxes with key parameters and table sizes. Pandas Tutor highlights selected rows and links them to their new positions after a transformation.
+
+**After (human):**
+> Several tools have tried to make data wrangling code less opaque. Unravel is probably the closest to what WaitGPT does — it pulls out operation summaries so you can see parameters and table sizes without reading the code. But you need the full script first, which is the whole problem when an LLM is still writing it. Datamation and Pandas Tutor take a different angle: they animate the data itself (rows appearing, disappearing, moving) rather than abstracting the code. SOMNUS went furthest on the glyph side, cataloging 23 visual primitives, though I'm not sure anyone actually uses all 23 in practice.
+
+**Why this matters:** The "before" version treats each paper as an independent entry in a database. The "after" version shows someone who *read* these papers and has opinions about them — which is closer, which matters, which has practical limitations.
+
+---
+
+### A2. Over-Clean Categorization
+
+**Problem:** "The paper draws on three areas of prior work. The first is... The second area is... The third is..." This perfectly symmetric framing is a dead giveaway. Real categorization is messier — boundaries overlap, some areas get more attention than others, and writers acknowledge the arbitrariness of their grouping.
+
+**Words to watch:** "draws on N areas", "The first is...", "The second area is...", "The third is...", "can be broadly categorized into"
+
+**Before (AI):**
+> The paper draws on three areas of prior work. The first is NLI-based data analysis tools: systems that take natural language instructions and produce code or visualizations. The second area is sense-making of data processing code. The third is UI design for human-LLM interaction.
+
+**After (human):**
+> Most of the related work falls into two camps: tools that help users *issue* natural language commands for data analysis (like XNLI and ColDeco), and tools that help users *understand* the code those commands produce (like Unravel and Datamation). WaitGPT sits at the boundary — it does both, and adds a third concern that the paper doesn't label as a "category" but probably should: how to design interfaces where humans and LLMs are working at the same time, not taking turns.
+
+**Why this matters:** The "before" version is a clean taxonomy. The "after" version shows someone who noticed that the categories aren't perfectly disjoint and has a mild opinion about how the authors organized their story.
+
+---
+
+### A3. Pure Description Without Interpretation
+
+**Problem:** The text describes what each paper/system does but never says what the writer *thinks* about it. No "I found this convincing because...", no "this is a stretch", no "the sample size is small." The CLAUDE.md instruction "summary → interpret → reflect" is precisely about avoiding this. GPTZero is extremely sensitive to paragraphs that describe without reacting.
+
+**Words to watch:** Look for *absence* of: "I think", "I noticed", "I'm not sure", "this seems", "what struck me", "arguably", "to be fair", "my reading is that"
+
+**Before (AI — pure description):**
+> Whether this actually helps is an empirical question, and the authors test it. A formative study with 8 experienced ChatGPT users found that verifying raw code is mentally taxing. The follow-up user study (N=12) compared WaitGPT against a code-only baseline: WaitGPT scored significantly lower on the NASA-TLX cognitive load scale.
+
+**After (human — description + reaction):**
+> The authors actually ran a user study, which I appreciate — too many vis papers skip this. Twelve participants isn't a huge sample, but the NASA-TLX results ($p < .001$) are hard to dismiss. What I'm less sure about is whether the cognitive load difference comes from the *visual abstraction* or just from having *any* intermediate representation. A text-based summary of the operations might have scored similarly. The formative study (N=8) is more interesting to me: participants described specific moments where they lost track of the code mid-generation, which is the exact problem the streaming visualization is supposed to solve.
+
+**Why this matters:** The "before" reads like a press release summarizing results. The "after" shows a reader who engaged with the methodology and has doubts.
+
+---
+
+### A4. Uniform Confidence Level
+
+**Problem:** Every sentence is stated with exactly the same level of certainty. Real writers are confident about some things and tentative about others. This tonal flatness is one of the strongest signals for AI detectors.
+
+**Before (AI — flat confidence):**
+> The limitation is that Unravel needs a complete, static script as input. It cannot handle streaming code from an LLM agent, and it does not show runtime state. Graphologue also converts LLM output into node-link diagrams, but for general information-seeking, not data analysis. It has no notion of data operations or code execution.
+
+**After (human — varied confidence):**
+> Unravel's biggest limitation is obvious: it needs the whole script upfront. That's a dealbreaker for the streaming use case. Graphologue is a looser connection — it does node-link diagrams from LLM output, sure, but I'd argue the resemblance is mostly visual. The underlying problem (making sense of data operations) is quite different from Graphologue's goal of structuring free-form information.
+
+**Techniques for varying confidence:**
+- Strong claims: "That's a dealbreaker." "This is clearly wrong."
+- Mild claims: "I'd argue..." "The resemblance is mostly visual."
+- Honest uncertainty: "I'm not sure this holds." "I might be wrong about this, but..."
+- Concessions: "To be fair..." "That said..."
+
+---
+
+### A5. Template-Parallel Paragraph Structure
+
+**Problem:** Every paragraph in a section follows the same template. In a lit review, this looks like: "[Paper name] [verb] [what it does]. [Limitation]. [How it differs from the current paper]." Repeated for every entry. Human writers vary their paragraph structures — some papers get a sentence, some get a paragraph, some get compared to each other rather than to the current paper.
+
+**Before (AI — every paragraph same template):**
+> The most closely related system is Unravel, which abstracts data wrangling code into summary boxes that users can inspect and edit. The limitation is that Unravel needs a complete, static script as input. It cannot handle streaming code from an LLM agent.
+>
+> Graphologue also converts LLM output into node-link diagrams, but for general information-seeking, not data analysis. It has no notion of data operations or code execution.
+>
+> ColDeco shows before-and-after views of intermediate data alongside natural language explanations. This helps users understand what happened, but they cannot modify operations.
+>
+> XNLI decomposes a single NL-to-visualization query into transparent components, but it only handles one-shot queries, not multi-step iterative analysis.
+
+**After (human — varied structure and depth):**
+> Unravel is the most direct predecessor and the paper the authors clearly want to be compared against. The core ideas overlap — both abstract code into visual summaries with editable parameters — but Unravel assumes you hand it a finished script. For an LLM-in-the-loop workflow where code arrives token by token, that assumption falls apart. This is the real contribution: not the abstraction itself, but making it work incrementally.
+>
+> The other comparisons are looser. Graphologue does node-link diagrams from LLM text, ColDeco shows before-and-after data views, XNLI breaks queries into components. Each tackles a piece of the problem, but none of them were designed for the specific situation where you're watching an LLM write analysis code and want to intervene before it finishes.
+
+**Why this matters:** The "before" gives every paper equal weight in an identical format. The "after" spends more time on the paper that actually matters (Unravel) and bundles the others — which is what a human reader would naturally do.
+
+---
+
+### A6. Survey-Paper Conclusion Style
+
+**Problem:** The critique ends with a contribution-statement that reads like it belongs in the paper itself, not in a reader's reflection. "What none of these systems do is X, Y, and Z. [Paper] combines all of these." This is the paper's own framing, restated — not the reviewer's assessment.
+
+**Before (AI — restating the paper's own contribution claim):**
+> What none of these systems do is visualize the code as it is being generated, let users refine individual operations in place, and show runtime data state at each step. WaitGPT combines all of these in a single conversational interface, and the user study (N=12) suggests this combination does reduce the cognitive cost of verifying LLM-produced analysis code.
+
+**After (human — reviewer's own take):**
+> I think the strongest part of this paper is the streaming aspect — the fact that you can see the analysis taking shape *before* it's done. The editing and state-display features are nice, but other tools have done versions of those. What's new is the timing. Whether that matters enough to justify a new system (rather than, say, adding incremental parsing to Unravel) is a harder question, and one the evaluation doesn't quite answer because there's no Unravel baseline.
+
+---
+
+### A7. Formulaic Scope Justification
+
+**Problem:** When explaining why a research direction is excluded, AI produces a perfectly logical, self-contained justification that sounds like the authors wrote it themselves. Real reviewers are more casual, sometimes skeptical, about scope decisions.
+
+**Before (AI):**
+> This makes sense because WaitGPT works with a fixed set of data operations specific to Pandas, Matplotlib, and Seaborn. IDE debuggers and linters assume the user can reason about arbitrary code, which does not match the target audience of analysts who may not program regularly.
+
+**After (human):**
+> Fair enough — WaitGPT only handles a fixed set of Pandas/Matplotlib operations, so general-purpose debugging is out of scope. Though I wonder if this constraint will become a problem once users try anything beyond the ten supported operations. The paper doesn't discuss what happens when the LLM writes code that falls outside the recognized patterns.
 
 ---
 
@@ -299,10 +421,10 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 ### 18. Curly Quotation Marks
 
-**Problem:** ChatGPT uses curly quotes (“...”) instead of straight quotes ("...").
+**Problem:** ChatGPT uses curly quotes ("\u201c...\u201d") instead of straight quotes ("...").
 
 **Before:**
-> He said “the project is on track” but others disagreed.
+> He said \u201cthe project is on track\u201d but others disagreed.
 
 **After:**
 > He said "the project is on track" but others disagreed.
@@ -389,18 +511,34 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 ---
 
+## ACADEMIC QUICK CHECKLIST
+
+Before delivering academic text, run these additional checks:
+
+- ✓ **Every related work gets one sentence in the same "[X] does Y" format?** Rewrite — group by insight, vary depth, spend more words on what matters
+- ✓ **"The paper draws on N areas" with numbered categories?** Loosen the framing, acknowledge overlap
+- ✓ **No first-person reactions anywhere?** Add "I think", "I noticed", "I'm not convinced" where appropriate
+- ✓ **Every claim stated with equal confidence?** Vary — be assertive on obvious points, tentative on uncertain ones
+- ✓ **Conclusion restates the paper's own contribution claim?** Replace with your own assessment
+- ✓ **Each paragraph in a section follows the same template?** Vary structure, let some papers share a paragraph
+- ✓ **Study results described without questioning methodology?** Add at least one "but what about..." or "N=12 is small"
+
+---
+
 ## Process
 
 1. Read the input text carefully
-2. Identify all instances of the patterns above
-3. Rewrite each problematic section
-4. Ensure the revised text:
+2. **Determine the genre** — Is this academic writing, general prose, blog post, etc.? Academic text requires the A1-A7 patterns in addition to the general patterns
+3. Identify all instances of the patterns above
+4. Rewrite each problematic section
+5. Ensure the revised text:
    - Sounds natural when read aloud
    - Varies sentence structure naturally
    - Uses specific details over vague claims
    - Maintains appropriate tone for context
    - Uses simple constructions (is/are/has) where appropriate
-5. Present the humanized version
+   - **For academic text:** Shows evidence of a reader who actually engaged with the material
+6. Present the humanized version
 
 ## Output Format
 
@@ -410,7 +548,7 @@ Provide:
 
 ---
 
-## Full Example
+## Full Example (General)
 
 **Before (AI-sounding):**
 > Great question! Here is an essay on this topic. I hope this helps!
@@ -427,7 +565,7 @@ Provide:
 >
 > While specific details are limited based on available information, it could potentially be argued that these tools might have some positive effect. Despite challenges typical of emerging technologies—including hallucinations, bias, and accountability—the ecosystem continues to thrive. In order to fully realize this potential, teams must align with best practices.
 >
-> In conclusion, the future looks bright. Exciting times lie ahead as we continue this journey toward excellence. Let me know if you’d like me to expand on any section!
+> In conclusion, the future looks bright. Exciting times lie ahead as we continue this journey toward excellence. Let me know if you'd like me to expand on any section!
 
 **After (Humanized):**
 > AI coding assistants speed up some tasks. In a 2024 study by Google, developers using Codex completed simple functions 55% faster than a control group, but showed no improvement on debugging or architectural decisions.
@@ -440,24 +578,32 @@ Provide:
 >
 > None of this means the tools are useless. It means they are tools. They do not replace judgment, and they do not eliminate the need for tests. If you do not have tests, you cannot tell whether the suggestion is right.
 
+---
+
+## Full Example (Academic — Paper Critique)
+
+**Before (AI — 99% GPTZero score):**
+> The paper draws on three areas of prior work. The first is NLI-based data analysis tools: systems that take natural language instructions and produce code or visualizations. ChatGPT's Advanced Data Analysis mode is the most widely used example. XNLI decomposes a single query into attributes, tasks, and visual encodings so users can see what the system decided. ColDeco pairs grounded abstraction matching with intermediate result views.
+>
+> The second area is sense-making of data processing code. Datamation uses animation to show how data changes across operations. SOMNUS provides 23 static glyphs for wrangling operations at different granularities. Unravel converts operations into editable summary boxes with key parameters and table sizes. Pandas Tutor highlights selected rows and links them to their new positions after a transformation.
+>
+> The third is UI design for human-LLM interaction. Graphologue turns LLM-generated text into interactive diagrams. AI Chains lets users pipe the output of one LLM step into the next. DynaVis synthesizes UI widgets on the fly for editing visualizations.
+
+**After (human — passes GPTZero):**
+> The related work that matters most here is Unravel. Both systems do the same thing at a high level — turn data wrangling code into visual summaries you can edit — but Unravel assumes you already have a complete script. That's the gap WaitGPT fills: it parses code as it arrives from the LLM, token by token. Whether the incremental parsing is technically hard or just an engineering detail is something the paper doesn't fully address, and I wish it did.
+>
+> On the NL-to-analysis side, XNLI and ColDeco both try to make the system's decisions transparent, but they're designed for single queries. A user asks one question, gets one visualization, and can inspect what happened. WaitGPT handles multi-step workflows where the LLM chains together several operations, which is closer to how people actually use ChatGPT's data analysis mode in practice.
+>
+> The Graphologue comparison is interesting but a bit of a stretch. Yes, both tools produce node-link diagrams from LLM output, but Graphologue is about structuring free-form text — it doesn't know what a DataFrame is. I think the authors included it mainly because the visual form looks similar.
+
 **Changes made:**
-- Removed chatbot artifacts ("Great question!", "I hope this helps!", "Let me know if...")
-- Removed significance inflation ("testament", "pivotal moment", "evolving landscape", "vital role")
-- Removed promotional language ("groundbreaking", "nestled", "seamless, intuitive, and powerful")
-- Removed vague attributions ("Industry observers") and replaced with specific sources (Google study, named engineers, Uplevel study)
-- Removed superficial -ing phrases ("underscoring", "highlighting", "reflecting", "contributing to")
-- Removed negative parallelism ("It's not just X; it's Y")
-- Removed rule-of-three patterns and synonym cycling ("catalyst/partner/foundation")
-- Removed false ranges ("from X to Y, from A to B")
-- Removed em dashes, emojis, boldface headers, and curly quotes
-- Removed copula avoidance ("serves as", "functions as", "stands as") in favor of "is"/"are"
-- Removed formulaic challenges section ("Despite challenges... continues to thrive")
-- Removed knowledge-cutoff hedging ("While specific details are limited...")
-- Removed excessive hedging ("could potentially be argued that... might have some")
-- Removed filler phrases ("In order to", "At its core")
-- Removed generic positive conclusion ("the future looks bright", "exciting times lie ahead")
-- Replaced media name-dropping with specific claims from specific sources
-- Used simple sentence structures and concrete examples
+- Broke the symmetric "three areas" framing — organized by relevance instead
+- Gave Unravel proportionally more space (it's the closest predecessor)
+- Added first-person reactions ("I wish it did", "I think the authors included it mainly because...")
+- Varied confidence levels (strong: "That's the gap"; tentative: "a bit of a stretch")
+- Bundled less-relevant works instead of giving each one a sentence
+- Questioned the paper's own choices (Graphologue comparison)
+- Varied paragraph length and structure
 
 ---
 
@@ -465,4 +611,8 @@ Provide:
 
 This skill is based on [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing), maintained by WikiProject AI Cleanup. The patterns documented there come from observations of thousands of instances of AI-generated text on Wikipedia.
 
+The academic writing patterns (A1-A7) are based on analysis of text flagged by GPTZero at 99% AI probability, where the writing was technically competent and free of obvious AI vocabulary but structurally identifiable as machine-generated due to uniform treatment of sources, missing first-person engagement, and template-parallel paragraph construction.
+
 Key insight from Wikipedia: "LLMs use statistical algorithms to guess what should come next. The result tends toward the most statistically likely result that applies to the widest variety of cases."
+
+Key insight for academic writing: **The most detectable AI pattern in scholarly text is not word choice — it's the absence of a reader.** Human academic writing shows someone who read the papers, formed opinions, and decided what matters more than what. AI academic writing treats every source and every claim with exactly the same weight and structure.
