@@ -5,9 +5,14 @@
   },
   "plugins": [
     {
-      "name": "personal-tools",
-      "description": "Fanshi's personal skill collection: ML paper writing, scientific slides, LaTeX posters, humanizer, web extraction, and more.",
-      "source": "./"
+      "name": "original",
+      "description": "Original personal skill collection: ML paper writing, scientific slides, LaTeX posters, humanizer, web extraction, and more.",
+      "source": "./original"
+    },
+    {
+      "name": "datascience",
+      "description": "Data science skills collection.",
+      "source": "./datascience"
     }
   ]
 }
