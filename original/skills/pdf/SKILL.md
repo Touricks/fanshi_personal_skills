@@ -10,40 +10,118 @@ license: Proprietary. LICENSE.txt has complete terms
 
 This guide covers essential PDF processing operations using Python libraries and command-line tools. For advanced features, JavaScript libraries, and detailed examples, see REFERENCE.md. If you need to fill out a PDF form, read FORMS.md and follow its instructions.
 
-## CRITICAL: When to Use `pdftotext` Instead of Reading PDFs Directly
+---
 
-Claude's Read tool converts each PDF page into an image. The API has a **hard limit of 100 images per conversation**. Any PDF over ~90 pages will fail with "too many images and documents" error.
+## CRITICAL: Smart PDF Reading — Avoid Context Overflow
 
-**This is the #1 cause of failures when processing large PDFs (lecture slides, reports, books).**
+Claude's Read tool converts each PDF page into an image. The API has a **hard limit of 100 images per conversation**. A 90+ page PDF will fail outright, and even smaller PDFs can consume enormous context budget (each page-image costs far more tokens than equivalent plain text).
 
-### Decision rule:
-| PDF size | Action |
-|----------|--------|
-| **Over 50 pages** | **Always use `pdftotext` first.** Do NOT read the PDF directly. |
-| 10-50 pages | Read with the Read tool using the `pages` parameter to limit pages |
-| Under 10 pages | Read directly with the Read tool |
+**This is the #1 cause of failures when processing PDFs. Always think before you read.**
 
-### How to use `pdftotext`:
+### Step 0: Probe First, Read Later
+
+For any PDF the user uploads or asks you to read, **run the probe script first** to understand what you're dealing with:
+
 ```bash
-# Check page count first
-/opt/homebrew/bin/pdfinfo "document.pdf" | grep Pages
-
-# Extract full text
-/opt/homebrew/bin/pdftotext "document.pdf" "document.txt"
-
-# Extract with layout preserved (useful for tables/columns)
-/opt/homebrew/bin/pdftotext -layout "document.pdf" "document.txt"
-
-# Extract specific page range
-/opt/homebrew/bin/pdftotext -f 1 -l 20 "document.pdf" "document.txt"
+python scripts/probe_pdf.py <file.pdf>
 ```
 
-### When delegating to agents:
-If spawning Task agents to process PDFs, **always extract text first** and instruct agents with strong negation:
-- GOOD: "Do NOT read any PDF files. ONLY read the .txt file."
-- BAD: "Prefer reading the text file over the PDF."
+This costs zero context tokens and gives you: page count, content type (text-dense / slides / scanned), estimated token cost, whether a TOC exists, and a recommended reading strategy. Follow the recommended strategy.
 
-Agents ignore weak preferences but obey strong prohibitions.
+If probe_pdf.py is not available (e.g. running outside the skill directory), do the manual equivalent:
+
+```bash
+pdfinfo <file.pdf> | grep Pages
+pdftotext -f 1 -l 3 <file.pdf> - | head -100
+```
+
+This tells you the page count and whether pdftotext produces real text (vs. empty output for scanned PDFs).
+
+### Decision Tree
+
+```
+Is page count known?
+  No  → Run: pdfinfo <file.pdf> | grep Pages
+  Yes ↓
+
+Is the PDF likely scanned (pdftotext produces < 50 chars/page)?
+  Yes → Go to "Scanned PDF Path" below
+  No  ↓
+
+Page count?
+  ≤ 10 pages
+    → Read directly with Read tool. Safe.
+
+  11-50 pages AND content is sparse (slides, < 500 chars/page)
+    → pdftotext full extraction, read the .txt
+
+  11-50 pages AND content is dense (> 500 chars/page)
+    → pdftotext full extraction
+    → Check: if .txt file > 40k tokens (~120k chars), read in chunks
+    → Otherwise read the .txt in full
+
+  51-150 pages
+    → NEVER read the PDF directly
+    → pdftotext -f 1 -l 5 → read overview/TOC first
+    → Then extract specific sections by page range as needed
+    → If user needs full coverage: python scripts/smart_read.py
+
+  > 150 pages
+    → NEVER read the PDF directly
+    → MUST use chunked smart reading
+    → python scripts/smart_read.py <file.pdf> --output-dir <dir>
+    → Read index.json first (~small), then read specific chunks on demand
+```
+
+### Scanned PDF Path
+
+When pdftotext produces empty or garbled output (< 50 chars/page average), the PDF is likely scanned or image-based:
+
+1. **Try OCR first** (if pytesseract and pdf2image are available):
+   ```python
+   from pdf2image import convert_from_path
+   import pytesseract
+
+   # Process in small batches to control memory
+   for start in range(0, total_pages, 5):
+       images = convert_from_path(pdf_path, first_page=start+1, last_page=min(start+5, total_pages))
+       for i, img in enumerate(images):
+           text = pytesseract.image_to_string(img)
+           # Save text to file...
+   ```
+
+2. **If OCR is not available or quality is poor**, fall back to reading pages as images with the Read tool — but **strictly limit to 10 pages per batch**. Ask the user which pages matter most.
+
+### Chunked Smart Reading (for large PDFs)
+
+For PDFs over ~50 dense pages where the user needs comprehensive understanding:
+
+```bash
+python scripts/smart_read.py <file.pdf> --output-dir <dir> --chunk-size 15
+```
+
+This produces:
+- `index.json` — A manifest listing every chunk with page ranges, character counts, estimated tokens, and a preview of the first line
+- `chunk_001.txt`, `chunk_002.txt`, ... — The actual text, split by page range
+
+**Workflow:**
+1. Read `index.json` (small, fits easily in context)
+2. Identify which chunks are relevant based on the user's question
+3. Read only those specific chunk files
+4. If the user needs a full summary, process chunks one at a time and build up notes incrementally — do NOT try to read all chunks into context simultaneously
+
+### Delegating to Subagents
+
+When spawning Task agents to process PDF content, **always extract text BEFORE spawning the agent** and pass the .txt path instead. Use strong prohibitions in the prompt:
+
+```
+MANDATORY: Do NOT read any .pdf file with the Read tool. ONLY read the .txt files provided.
+PDF files: {list of .txt paths}
+```
+
+Agents tend to ignore soft preferences ("prefer reading the text file") but will obey strong prohibitions. This single pattern prevents subagents from accidentally consuming the image budget.
+
+---
 
 ## Quick Start
 
@@ -143,11 +221,10 @@ with pdfplumber.open("document.pdf") as pdf:
     for page in pdf.pages:
         tables = page.extract_tables()
         for table in tables:
-            if table:  # Check if table is not empty
+            if table:
                 df = pd.DataFrame(table[1:], columns=table[0])
                 all_tables.append(df)
 
-# Combine all tables
 if all_tables:
     combined_df = pd.concat(all_tables, ignore_index=True)
     combined_df.to_excel("extracted_tables.xlsx", index=False)
@@ -163,14 +240,9 @@ from reportlab.pdfgen import canvas
 c = canvas.Canvas("hello.pdf", pagesize=letter)
 width, height = letter
 
-# Add text
 c.drawString(100, height - 100, "Hello World!")
 c.drawString(100, height - 120, "This is a PDF created with reportlab")
-
-# Add a line
 c.line(100, height - 140, 400, height - 140)
-
-# Save
 c.save()
 ```
 
@@ -184,7 +256,6 @@ doc = SimpleDocTemplate("report.pdf", pagesize=letter)
 styles = getSampleStyleSheet()
 story = []
 
-# Add content
 title = Paragraph("Report Title", styles['Title'])
 story.append(title)
 story.append(Spacer(1, 12))
@@ -193,11 +264,9 @@ body = Paragraph("This is the body of the report. " * 20, styles['Normal'])
 story.append(body)
 story.append(PageBreak())
 
-# Page 2
 story.append(Paragraph("Page 2", styles['Heading1']))
 story.append(Paragraph("Content for page 2", styles['Normal']))
 
-# Build PDF
 doc.build(story)
 ```
 
@@ -225,7 +294,7 @@ qpdf input.pdf --pages . 1-5 -- pages1-5.pdf
 qpdf input.pdf --pages . 6-10 -- pages6-10.pdf
 
 # Rotate pages
-qpdf input.pdf output.pdf --rotate=+90:1  # Rotate page 1 by 90 degrees
+qpdf input.pdf output.pdf --rotate=+90:1
 
 # Remove password
 qpdf --password=mypassword --decrypt encrypted.pdf decrypted.pdf
@@ -251,16 +320,12 @@ pdftk input.pdf rotate 1east output rotated.pdf
 import pytesseract
 from pdf2image import convert_from_path
 
-# Convert PDF to images
 images = convert_from_path('scanned.pdf')
-
-# OCR each page
 text = ""
 for i, image in enumerate(images):
     text += f"Page {i+1}:\n"
     text += pytesseract.image_to_string(image)
     text += "\n\n"
-
 print(text)
 ```
 
@@ -268,10 +333,7 @@ print(text)
 ```python
 from pypdf import PdfReader, PdfWriter
 
-# Create watermark (or load existing)
 watermark = PdfReader("watermark.pdf").pages[0]
-
-# Apply to all pages
 reader = PdfReader("document.pdf")
 writer = PdfWriter()
 
@@ -287,8 +349,6 @@ with open("watermarked.pdf", "wb") as output:
 ```bash
 # Using pdfimages (poppler-utils)
 pdfimages -j input.pdf output_prefix
-
-# This extracts all images as output_prefix-000.jpg, output_prefix-001.jpg, etc.
 ```
 
 ### Password Protection
@@ -297,13 +357,10 @@ from pypdf import PdfReader, PdfWriter
 
 reader = PdfReader("input.pdf")
 writer = PdfWriter()
-
 for page in reader.pages:
     writer.add_page(page)
 
-# Add password
 writer.encrypt("userpassword", "ownerpassword")
-
 with open("encrypted.pdf", "wb") as output:
     writer.write(output)
 ```
@@ -312,6 +369,8 @@ with open("encrypted.pdf", "wb") as output:
 
 | Task | Best Tool | Command/Code |
 |------|-----------|--------------|
+| **Probe PDF** | probe_pdf.py | `python scripts/probe_pdf.py <file.pdf>` |
+| **Smart chunked read** | smart_read.py | `python scripts/smart_read.py <file.pdf> --output-dir <dir>` |
 | Merge PDFs | pypdf | `writer.add_page(page)` |
 | Split PDFs | pypdf | One page per file |
 | Extract text | pdfplumber | `page.extract_text()` |
@@ -319,7 +378,7 @@ with open("encrypted.pdf", "wb") as output:
 | Create PDFs | reportlab | Canvas or Platypus |
 | Command line merge | qpdf | `qpdf --empty --pages ...` |
 | OCR scanned PDFs | pytesseract | Convert to image first |
-| Fill PDF forms | pdf-lib or pypdf (see FORMS.md) | See FORMS.md |
+| Fill PDF forms | See FORMS.md | See FORMS.md |
 
 ## Next Steps
 
