@@ -10,11 +10,6 @@
       "source": "./original"
     },
     {
-      "name": "datascience",
-      "description": "Data science skills collection.",
-      "source": "./datascience"
-    },
-    {
       "name": "document",
       "description": "Document processing skills: draft-to-clean transformation, formalization, and polishing.",
       "source": "./document"
