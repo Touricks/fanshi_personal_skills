@@ -1,6 +1,6 @@
 ---
 name: humanizer
-version: 3.0.0
+version: 3.3.0
 description: |
   Remove signs of AI-generated writing from text. Use when editing or reviewing
   text to make it sound more natural and human-written. Based on Wikipedia's
@@ -14,6 +14,29 @@ description: |
   and similar classifiers. Covers catalog-style lit reviews, over-clean
   categorization, uniform confidence, missing first-person engagement, and
   template-parallel paragraph structures.
+
+  v3.1 adds: Second-pass patterns discovered after applying v3.0 and re-scanning
+  with GPTZero (still 99% AI). Covers exhaustive technical description,
+  formulaic first-person insertions, em dash density in academic LaTeX,
+  N-camps reframing trap, and burstiness/information-density uniformity.
+  These are "second-generation" AI tells — they appear in text that has
+  already been humanized once but still triggers classifiers.
+
+  v3.2 adds: THE PERPLEXITY CEILING — the fundamental discovery that
+  pattern-level editing of AI text has a hard ceiling. GPTZero uses statistical
+  models that detect the probability distribution of token sequences, not
+  individual sentences. "AI edits AI" retains the statistical fingerprint
+  regardless of surface changes. This version adds a PROCESS-LEVEL strategy:
+  human-first drafting, perplexity injection, structural noise, and a
+  collaborative workflow where AI assists human writing rather than the reverse.
+
+  v3.3 adds: GUIDED INTERVIEW MODE — an interactive Q&A workflow that uses
+  AskUserQuestion to extract the human's genuine thoughts about a paper before
+  any writing begins. The AI acts as a structured interviewer across 4 rounds
+  (first impression, technical engagement, critical analysis, personal connection),
+  then assembles the human's own words into a draft. This is the most reliable
+  method for producing text that passes statistical classifiers, because the
+  core token sequences originate from the human.
 allowed-tools:
   - Read
   - Write
@@ -36,6 +59,245 @@ When given text to humanize:
 3. **Preserve meaning** - Keep the core message intact
 4. **Maintain voice** - Match the intended tone (formal, casual, technical, etc.)
 5. **Add soul** - Don't just remove bad patterns; inject actual personality
+
+---
+
+## THE PERPLEXITY CEILING (v3.2 — READ THIS FIRST)
+
+**Three rounds of iterative humanization (v1→v3.0→v3.1) were tested against GPTZero. The score went from 99% → 99% → 100% AI. Pattern-level editing does not work against statistical classifiers.**
+
+### Why "AI edits AI" fails
+
+GPTZero and similar tools do not detect "AI words" or "AI sentence structures." They measure the **perplexity profile** of the entire document — the statistical distribution of how predictable each token is given its context. When an LLM writes text, it consistently selects high-probability tokens. When an LLM *edits* text, it replaces tokens with... other high-probability tokens. The statistical fingerprint is preserved across arbitrarily many rounds of editing.
+
+This means:
+- Replacing "delve" with "examine" does not help — both are high-probability choices for the context
+- Adding "I think" does not help — the surrounding text still has LLM-characteristic perplexity
+- Varying sentence length does not help — the LLM's choices of *which* lengths to use are themselves predictable
+- Even "messy" or "informal" LLM output is statistically detectable because the LLM's version of "messy" is itself predictable
+
+### What actually works: Process change
+
+The only reliable strategy is to change **who produces the base text**. The patterns in this skill (A1-A12, 1-24) remain useful as an editing checklist, but they must be applied to **human-written drafts**, not AI-generated ones.
+
+### THE HUMANIZER WORKFLOW (v3.2)
+
+**Step 1: Human drafts first (CRITICAL)**
+The human writes a rough draft. It can be messy, unpolished, have grammar errors, or be in bullet-point form. The key is that the base token sequence comes from a human brain, not an LLM. This is non-negotiable for passing statistical classifiers.
+
+Acceptable starting points:
+- Stream-of-consciousness notes taken while reading the paper
+- Voice-to-text transcription of the human talking about the paper
+- Rough bullet points of reactions and observations
+- A previous human-written assignment adapted for the new topic
+
+**Step 2: AI assists with specific, bounded requests**
+The human asks the AI for help with *specific* things, not wholesale generation:
+- "Fix the grammar in this paragraph" (small edit, preserves human perplexity)
+- "What is the correct citation format for this paper?"
+- "I'm trying to say X but can't find the right word" (human picks from suggestions)
+- "Does this argument make logical sense?"
+- "What am I forgetting from the related work section of the paper?"
+
+**Step 3: Human integrates and rewrites**
+The human takes AI suggestions and rewrites them *in their own words*. Copy-pasting AI output, even "good" AI output, reintroduces the statistical fingerprint.
+
+**Step 4: AI does a pattern check (this skill)**
+Run the A1-A12 and 1-24 patterns as a *checklist* on the human-written text. This catches any accidental AI-like patterns that humans sometimes produce (e.g., overusing "Additionally," or falling into rule-of-three). The AI flags problems; the **human** rewrites.
+
+**Step 5: Perplexity injection (optional, for extra safety)**
+See A13-A15 below for techniques that actively lower detectability.
+
+### GUIDED INTERVIEW MODE (v3.3 — THE RECOMMENDED APPROACH)
+
+When the user needs to produce writing that passes AI detection, the AI should **proactively offer to run the guided interview** rather than waiting for the user to write a draft. Most users (especially students with assignments) will not have a draft ready. The interview extracts their genuine thoughts and becomes the draft.
+
+**When to trigger:** The user says any of:
+- "Help me write a paper critique / reflection / review"
+- "I need to humanize this" (offer interview as alternative to pattern editing)
+- "How do I pass GPTZero?"
+- "Write about [paper X] in a way that doesn't get flagged"
+
+**How it works:** The AI runs 4 rounds of questions using AskUserQuestion, collecting the human's raw responses. These responses — messy, informal, genuine — become the foundation for the final text. The AI then organizes and lightly polishes, but the core phrasings remain the human's.
+
+---
+
+#### ROUND 1: First Impressions (before anything else)
+
+Goal: Capture the human's unfiltered, gut-level reaction. This is the highest-value material because it is maximally unpredictable to an LLM.
+
+Use AskUserQuestion with these prompts (adapt based on assignment type):
+
+**Q1.1:** "What's the paper about, in your own words? Pretend you're explaining it to a friend over coffee. Don't worry about being precise."
+
+**Q1.2:** "What was your first reaction when you finished reading? Did anything surprise you, confuse you, or annoy you?"
+
+**Q1.3:** "If you had to pick ONE thing this paper does that's actually new, what would it be?"
+
+**Why these questions work:**
+- Q1.1 forces the human to summarize in their own vocabulary, not the paper's
+- Q1.2 captures emotional/intuitive reactions that LLMs cannot generate
+- Q1.3 forces a judgment call that reveals the human's actual understanding
+
+---
+
+#### ROUND 2: Technical Engagement
+
+Goal: Get the human to engage with specific technical details. Their confusion, uncertainty, and partial understanding are the most valuable signals.
+
+**Q2.1:** "Was there anything in the paper you didn't fully understand, or had to re-read? What was it?"
+
+**Q2.2:** "The paper describes [specific method/system]. Does this make sense to you? What would you have done differently?"
+
+**Q2.3:** "Did the evaluation convince you? What would you have wanted to see that wasn't there?"
+
+**Why these questions work:**
+- Q2.1 generates "I didn't fully get..." statements that are impossible for AI to produce authentically
+- Q2.2 elicits alternative approaches from the human's own background
+- Q2.3 produces specific methodological critiques grounded in the human's understanding
+
+---
+
+#### ROUND 3: Connections and Context
+
+Goal: Anchor the critique in the human's personal academic context. These cross-references create low-probability token sequences.
+
+**Q3.1:** "Does this remind you of anything else you've read, in this class or elsewhere? How is it similar or different?"
+
+**Q3.2:** "If you were going to extend this work, what would you try? Or what question would you want answered next?"
+
+**Q3.3:** "How does this relate to things you've seen in practice — in your own projects, internships, or daily tool use?"
+
+**Why these questions work:**
+- Q3.1 generates genuine cross-references that no LLM can predict
+- Q3.2 reveals the human's research intuition
+- Q3.3 grounds academic content in personal experience
+
+---
+
+#### ROUND 4: The Literature (if the assignment requires it)
+
+Goal: Understand what the human actually noticed about the related work, rather than generating a comprehensive survey.
+
+**Q4.1:** "Which related works from the paper did you recognize or find interesting? Why?"
+
+**Q4.2:** "Were there any comparisons in the related work section that felt like a stretch to you?"
+
+**Q4.3:** "Is there anything the paper should have compared itself to but didn't?"
+
+**Why these questions work:**
+- Q4.1 reveals which papers the human actually engaged with (often a subset)
+- Q4.2 captures skepticism about the authors' framing
+- Q4.3 generates genuine gaps the human identified
+
+---
+
+#### ASSEMBLY: From interview to draft
+
+After collecting all responses, the AI assembles them into a draft following these rules:
+
+1. **Use the human's exact phrases as much as possible.** If the user said "it's basically a progress bar for data analysis," keep that phrase. Do not "improve" it to "it provides a visual representation of analytical progress."
+
+2. **Organize, don't generate.** The AI structures the human's answers into the required sections (Research Idea, Literature Review, etc.) but does not add new claims or observations the human didn't make.
+
+3. **Fill gaps by asking, not writing.** If the human didn't mention something important (e.g., the user study), ask: "The paper also has a user study with 12 participants. Did you have any reaction to that?" Do NOT write the missing section yourself.
+
+4. **Light polish only.** Fix grammar, smooth transitions, ensure proper citation format. Do NOT rewrite sentences to "sound better" — the human's slightly awkward phrasing is what makes it pass detection.
+
+5. **Preserve imperfections.** If the human wrote "I'm not sure this makes sense but..." — keep it. These hedges and self-doubts are gold for detection avoidance.
+
+6. **Run pattern check (A1-A12) as a final pass.** Flag any accidental AI-like patterns in the human's own writing. Let the human decide whether to change them.
+
+---
+
+#### EXAMPLE: Interview → Draft
+
+**User's answer to Q1.1:**
+> "so basically this tool shows you a flowchart of what the AI is doing while it writes python code for data analysis. like instead of just seeing code scroll by you see boxes saying 'filter' 'group' etc. and each box shows how many rows are left"
+
+**User's answer to Q1.2:**
+> "honestly the streaming part is cool but I wonder if anyone actually needs this vs just waiting 10 seconds for the code to finish. also the user study was tiny, like 12 people"
+
+**User's answer to Q2.1:**
+> "the AST parsing section lost me a bit. they say they map code to 10 operation types but I don't get what happens when the code doesn't fit those types"
+
+**Assembled draft (preserving user's voice):**
+> WaitGPT shows you a flowchart of what the AI is doing while it writes Python code for data analysis. Instead of watching code scroll by, you see boxes labeled "filter," "group," and so on, and each box shows how many rows are left in the table. The streaming part is the main selling point — the diagram builds itself as the code arrives.
+>
+> I'll be honest: I wonder if anyone actually needs this versus just waiting ten seconds for the code to finish. The paper argues that errors get introduced mid-generation and go unnoticed, which is plausible, but the user study only had 12 people. That's small enough that I'd want to see it replicated.
+>
+> The AST parsing section lost me a bit. They say they map code to ten operation types, but I don't understand what happens when the code doesn't fit those types. Presumably it does sometimes, especially with more complex Pandas idioms, but the paper doesn't address this.
+
+**Notice:** The draft uses phrases like "I'll be honest," "lost me a bit," "presumably it does sometimes" — all from the human's own responses. The AI organized them into paragraphs and fixed minor grammar, but the voice, the opinions, and the specific concerns are all the human's.
+
+---
+
+### For this skill's AI-as-editor role
+
+When the user asks you to humanize text that was **already generated by AI**, be honest and offer the interview alternative:
+
+> "I can improve the surface patterns (A1-A24), but GPTZero-level classifiers detect statistical properties I cannot change by editing. Three rounds of testing confirmed this — the score went from 99% to 100% despite increasingly sophisticated edits.
+>
+> The most reliable approach is for me to interview you about the paper and build a draft from your own words. This takes about 10 minutes and produces text that genuinely passes detection because the core phrasings come from you.
+>
+> Would you like me to: (A) do the best pattern-level edit I can (may still be detected), or (B) start the guided interview?"
+
+**Always recommend option B.** Option A is provided for cases where the user is aware of the risk and proceeds anyway.
+
+---
+
+## PERPLEXITY INJECTION TECHNIQUES (A13-A15)
+
+These techniques actively reduce detectability by introducing token sequences that LLMs would not produce. They are **supplements** to human-first drafting, not replacements.
+
+### A13. Personal Specificity
+
+**Problem:** LLMs produce generic first-person statements ("I found this interesting"). Detectors recognize these because the "personal" content is statistically indistinguishable from non-personal content — it doesn't actually contain unpredictable information.
+
+**Solution:** Include details that are genuinely specific to your experience and that an LLM could not predict.
+
+**Generic (detectable):**
+> I found the evaluation section convincing.
+
+**Specific (harder to detect):**
+> This reminded me of a similar evaluation setup from the Vega-Lite paper I read last week for the other assignment — they also used NASA-TLX but with a much bigger sample. Comparing the two, WaitGPT's effect sizes are actually larger, which surprised me.
+
+**Why it works:** The cross-reference to a specific other assignment, a specific other paper, and a specific personal reaction ("surprised me") creates a token sequence with low probability under any LLM — because the LLM has no way to know what you read last week.
+
+**More examples:**
+- "I tried reproducing the filter example from Figure 3 in a Jupyter notebook and it took me longer than the paper implies"
+- "My lab mate pointed out that the ten operation types don't cover pivot tables, which we use constantly"
+- "I read this on the bus and kept losing my place in the related work section, which is ironic given the paper is about tracking progress"
+
+---
+
+### A14. Linguistic Noise and Imperfection
+
+**Problem:** LLM text is grammatically perfect and syntactically well-formed. Every sentence parses cleanly. Real human academic writing contains minor imperfections that are statistically unusual for LLMs.
+
+**Techniques (use sparingly — 2-3 per page, not every sentence):**
+
+- **Self-correction:** "The system uses static analysis — well, not exactly static, since it runs during generation — to identify operations."
+- **Parenthetical tangents:** "Unravel (which I keep wanting to call 'Unwind' for some reason) needs a complete script."
+- **Colloquial register shifts:** After a technical paragraph, drop into casual: "Basically, it's a progress bar for data analysis, except useful."
+- **Hedged retractions:** "The user study is strong. Actually, let me walk that back — the sample is small enough that one outlier could shift the results."
+- **Incomplete thoughts acknowledged:** "There's something about the streaming that I can't quite articulate — it changes the power dynamic between user and LLM, but I'm not sure how to formalize that."
+
+**Why it works:** These patterns have very low probability under LLM generation because LLMs optimize for coherent, well-formed output. Self-corrections, tangents, and register shifts are "errors" the LLM is trained to avoid.
+
+---
+
+### A15. Structural Unpredictability
+
+**Problem:** Even "varied" LLM structures follow predictable patterns. The LLM's version of "variety" is itself statistically characteristic.
+
+**Techniques:**
+
+- **Revisit an earlier point unexpectedly:** In the conclusion, circle back to something from the introduction that you didn't fully resolve. "I keep coming back to the AST parsing question from earlier..."
+- **Break the assignment structure:** If the template asks for "Research Idea" then "Literature Review," let observations from one bleed into the other. A stray comment about related work in the Research Idea section is very human.
+- **Disproportionate attention:** Spend half the lit review on one paper and dismiss the rest in two sentences. LLMs distribute attention evenly.
+- **End mid-thought:** The last sentence of a section doesn't need to be a clean wrap-up. "I'd want to see this tested with a harder dataset before drawing conclusions, but that's probably beyond the scope of a CHI paper" leaves a thread hanging.
+- **Include a question you can't answer:** "I'm curious whether the streaming parsing introduces latency that the paper doesn't measure. The figures don't show timing data."
 
 ---
 
@@ -186,6 +448,132 @@ These patterns are specific to research papers, literature reviews, paper critiq
 
 **After (human):**
 > Fair enough — WaitGPT only handles a fixed set of Pandas/Matplotlib operations, so general-purpose debugging is out of scope. Though I wonder if this constraint will become a problem once users try anything beyond the ten supported operations. The paper doesn't discuss what happens when the LLM writes code that falls outside the recognized patterns.
+
+---
+
+### A8. Exhaustive Technical Description
+
+**Problem:** When describing a system or method, AI enumerates every feature in logical order: component A feeds into component B, which produces C, which displays D. Every detail is covered, nothing is skipped, nothing is called confusing. Real readers focus on what caught their attention, admit when they skimmed a section, and skip details they found uninteresting. This is one of the **strongest GPTZero triggers** — entire technical-description paragraphs get flagged even when the prose style is otherwise good.
+
+**Words to watch:** Look for systematic enumeration: "First, it does X. Then Y. Each Z is linked into W. [Feature] at each node shows..."
+
+**Before (AI — entire paragraph flagged orange by GPTZero):**
+> Xie et al. propose WaitGPT, a system that converts LLM-generated data analysis code into an interactive node-based flow diagram while the code is still being generated. Instead of asking users to read raw Python scripts from tools like ChatGPT's Code Interpreter, WaitGPT runs static analysis on the abstract syntax tree to identify data operations---filter, group, merge, visualize, and so on---and renders each as a visual primitive linked into a directed graph. Table glyphs at each node show the runtime state of intermediate data frames (row and column counts), so you can spot when a filter accidentally drops half your data.
+
+**After (human — selective focus, admitted gaps):**
+> The basic idea behind WaitGPT is that instead of dumping a Python script into the chat and hoping users will read it, the system parses the code as the LLM writes it and shows a flow diagram of what's happening: filter here, group there, merge these two tables. Each node has a small table glyph showing row and column counts, which is actually the part I found most clever — you can immediately see if a filter wiped out 90% of your data without reading a single line of code.
+>
+> I'm less clear on the AST parsing details. The paper says it uses static analysis to map code to a fixed set of ten operation types, but doesn't say much about what happens when the mapping fails. I assume it does sometimes.
+
+**Why this matters:** The "before" covers every feature systematically. The "after" focuses on what the reader cared about (table glyphs, the streaming aspect) and explicitly flags what they didn't fully follow (AST parsing). This selective attention is very hard for AI to fake, and very easy for GPTZero to detect the absence of.
+
+**Techniques:**
+- **Skip something.** Mention that you skimmed a section or didn't fully understand a detail. "The AST parsing section was dense; the important thing is..."
+- **Zoom in unevenly.** Spend three sentences on the feature that interested you, half a sentence on the rest.
+- **Admit confusion.** "I'm not entirely sure how X connects to Y" is a strong human signal.
+- **React mid-description.** Don't save opinions for a separate paragraph. "...which is actually clever because..." or "...which seems like overkill for..." embedded in the description itself.
+
+---
+
+### A9. Formulaic First-Person Insertions
+
+**Problem:** After learning that AI text lacks first-person voice (A3), the temptation is to mechanically insert "I think" or "I find" at predictable locations: paragraph openings and before praise/criticism. GPTZero detects this because the "I" statements are structurally placed but don't change the underlying voice of the surrounding prose. The sentence before and after the "I" insertion reads exactly the same as it would without it.
+
+**Detected pattern:** "I" appears at paragraph boundaries (first or second sentence), wrapped around an otherwise flat descriptive paragraph.
+
+**Before (AI — "I" inserted but paragraph still flagged):**
+> The part I find most compelling is the streaming. The visualization is not a post-hoc summary; it grows as the code arrives, line by line. Tools like Unravel cannot do this because they need a finished script. Users can also edit operation parameters on the diagram or query the LLM about a specific node without regenerating everything. It all lives inside the chat window, which avoids the context-switch problem that plagues tools requiring a separate IDE or notebook view.
+
+**After (human — "I" woven throughout, not just at the top):**
+> What sold me on the paper was watching the diagram build itself — or at least, imagining it from the figures, since I didn't get to try the system. Code streams in and the flow chart grows with it. That's different from Unravel, which needs a finished script before it can show you anything. I can also see the appeal of editing parameters directly on a node rather than hunting through code, though I wonder how well that works in practice when the LLM has already moved on to the next operation.
+
+**Key differences:**
+- First-person voice in the "before" is a **label** ("I find X compelling") followed by impersonal exposition. In the "after," the "I" is **embedded in the reasoning** throughout — "imagining it from the figures," "I can also see," "I wonder."
+- The "after" acknowledges a limitation of the reviewer's own experience ("I didn't get to try the system"), which is impossible for AI to generate because AI doesn't have experiences.
+- The "after" has more **tentative, in-progress thinking** ("I wonder how well that works") rather than confident evaluation.
+
+---
+
+### A10. Em Dash Density in Academic Text
+
+**Problem:** Pattern #13 (em dash overuse) applies to general text, but academic rewrites often *increase* em dash usage because em dashes feel like a quick way to add parenthetical asides and "voice." In LaTeX (`---`), this is especially visible. The v3.0 rewrite of the paper critique introduced **more** em dashes than the original. GPTZero notices.
+
+**Rule of thumb:** Maximum 2 em dashes per page in academic text. Replace the rest with commas, parentheses, or restructured sentences.
+
+**Before (too many em dashes in "humanized" academic text):**
+> WaitGPT sits at the boundary---it does both---and adds a concern the paper does not label as its own category but probably should: how to design interfaces where a human and an LLM are working at the same time rather than taking turns.
+
+**After (em dashes reduced):**
+> WaitGPT sits at the boundary because it does both, and it raises a question the paper doesn't name as a separate concern: how do you design an interface where the human and the LLM are working at the same time, not taking turns?
+
+**Additional example:**
+> Before: Unravel is the closest predecessor---it pulls out operation summaries with editable parameters and table sizes---but it needs a complete script first, which is the whole problem when an LLM is still writing the code.
+>
+> After: Unravel is the closest predecessor. It pulls out operation summaries with editable parameters and table sizes, but it needs a complete script first. That's the whole problem when an LLM is still writing the code.
+
+**Technique:** When you catch yourself reaching for an em dash, try (in order): a period and new sentence, a comma, parentheses. Only use an em dash if none of those work.
+
+---
+
+### A11. The "N Camps/Categories" Trap
+
+**Problem:** v3.0 correctly identified "The paper draws on three areas" as a GPTZero trigger (A2). However, replacing it with "Most of the related work falls into two camps" is the **same pattern with a different number**. Any sentence that explicitly bins related work into numbered groups triggers detection: "two camps," "three streams," "N categories," "can be broadly divided into."
+
+**The issue is structural framing, not the specific number.**
+
+**Before (still flagged green by GPTZero after v3.0 rewrite):**
+> Most of the related work falls into two camps: tools that help users issue natural language commands for data analysis, and tools that help users make sense of the code those commands produce.
+
+**After (avoids categorical framing entirely):**
+> The question WaitGPT is really answering is: once an LLM starts writing analysis code, how do you keep the human in the loop? Other tools have tackled pieces of this. XNLI and ColDeco let users inspect and modify NL-to-vis queries, but they handle one query at a time. Unravel and Datamation help users understand data wrangling code, but after the code is already written. WaitGPT is doing something none of them tried: showing and editing the analysis *while the code is still arriving*.
+
+**Why this works:** Instead of categorizing papers into groups, it frames the discussion around a *question* that the current paper answers. The related works enter naturally as partial answers to that question, not as entries in a taxonomy.
+
+**Techniques for avoiding categorical framing:**
+- **Lead with a question, not a taxonomy.** "The question is... Other tools have tried..."
+- **Lead with the gap.** "Nobody had tried X until this paper. The closest attempts were..."
+- **Lead with the most important paper.** "Unravel is the obvious comparison point. Beyond that..."
+- **If you must categorize, don't announce it.** Just transition naturally between groups without saying "falls into N camps."
+
+---
+
+### A12. Information Density Uniformity (Low Burstiness)
+
+**Problem:** GPTZero explicitly measures "burstiness" — the variation in sentence complexity and information density within a text. AI text has **uniformly medium** perplexity: every sentence carries roughly the same amount of information, with the same syntactic complexity. Human writing naturally alternates between **dense** stretches (packed with citations, technical details, numbers) and **sparse** stretches (reflections, asides, short reactions, questions).
+
+**This is a statistical property, not a word-choice issue.** You cannot fix it by changing individual words. You must change the *rhythm* of information delivery.
+
+**Before (uniform density — every sentence at the same level):**
+> The formative study (N=8) surfaced a concrete pain point: participants described losing track of operations mid-generation and missing errors they would have caught in a static script. The follow-up study (N=12) compared WaitGPT against a code-only baseline. The NASA-TLX results were strong ($p < .001$ for mental, physical, and affective dimensions), and ten of twelve participants said they felt more confident in the analysis when using the diagram.
+
+**After (alternating dense and sparse):**
+> The formative study found what you'd expect: people lose track when code is streaming by. Eight participants, all experienced ChatGPT users, described missing errors they would have caught in a static script. Not surprising, but useful to have documented.
+>
+> The controlled study is more interesting. N=12, WaitGPT vs. code-only, measured with NASA-TLX. The effect was large — $p < .001$ on mental, physical, and affective load. Ten out of twelve said they felt more confident with the diagram. Small sample, but hard to argue with an effect that clean.
+
+**What changed:**
+- Short, low-information sentence: "Not surprising, but useful to have documented." This is a "breathing" sentence — it carries almost no new information but signals a human pausing to react.
+- The dense sentence ("N=12, WaitGPT vs. code-only, measured with NASA-TLX") is deliberately compressed — almost telegraphic. This contrasts with the conversational sentences around it.
+- "Small sample, but hard to argue with an effect that clean" — short, punchy, opinionated. Breaks the rhythm.
+
+**Techniques for burstiness:**
+- **Insert "breathing" sentences.** After a dense technical claim, add a short reaction: "That matters." / "Fair enough." / "I had to read that twice."
+- **Compress some info, expand other info.** Don't give everything the same amount of space. Technical details can be compressed into terse lists; your reactions should be more expansive.
+- **Use sentence fragments.** "Small sample. Big effect." This is very human and very un-AI.
+- **Vary paragraph length dramatically.** One paragraph can be 5 sentences; the next can be 1 sentence. AI almost never produces a one-sentence paragraph.
+
+---
+
+## SECOND-PASS CHECKLIST
+
+After applying all A1-A7 patterns and rewriting, do a second pass for these v3.1 patterns:
+
+- ✓ **Technical description covers every feature in order?** Skip something, zoom in unevenly, admit confusion about a detail (A8)
+- ✓ **"I think" / "I find" only appears at paragraph openings?** Weave first-person throughout, embed reactions mid-sentence, mention your own reading experience (A9)
+- ✓ **More than 2 em dashes per page?** Replace most with commas, periods, or parentheses (A10)
+- ✓ **"Falls into N camps/categories/areas"?** Reframe around a question or lead with the most important paper instead (A11)
+- ✓ **Every sentence roughly the same length and complexity?** Add breathing sentences, compress some info, expand other info, use fragments (A12)
+- ✓ **Every paragraph roughly the same length?** Make some paragraphs short (1-2 sentences), others long. One-sentence paragraphs are very human (A12)
 
 ---
 
@@ -511,17 +899,24 @@ These patterns are specific to research papers, literature reviews, paper critiq
 
 ---
 
-## ACADEMIC QUICK CHECKLIST
+## ACADEMIC CHECKLIST (TWO PASSES)
 
-Before delivering academic text, run these additional checks:
+### Pass 1 — Structure and Voice (A1-A7):
+- ✓ **Every related work gets one sentence in the same "[X] does Y" format?** Rewrite — group by insight, vary depth, spend more words on what matters (A1)
+- ✓ **"Falls into N areas/camps/categories"?** Avoid categorical framing entirely — lead with a question or the most important paper (A2, A11)
+- ✓ **No first-person reactions anywhere?** Add "I think", "I noticed", "I'm not convinced" — but weave them throughout, not just at paragraph openings (A3, A9)
+- ✓ **Every claim stated with equal confidence?** Vary — be assertive on obvious points, tentative on uncertain ones (A4)
+- ✓ **Conclusion restates the paper's own contribution claim?** Replace with your own assessment (A6)
+- ✓ **Each paragraph in a section follows the same template?** Vary structure, let some papers share a paragraph (A5)
+- ✓ **Study results described without questioning methodology?** Add at least one "but what about..." or "N=12 is small" (A3)
 
-- ✓ **Every related work gets one sentence in the same "[X] does Y" format?** Rewrite — group by insight, vary depth, spend more words on what matters
-- ✓ **"The paper draws on N areas" with numbered categories?** Loosen the framing, acknowledge overlap
-- ✓ **No first-person reactions anywhere?** Add "I think", "I noticed", "I'm not convinced" where appropriate
-- ✓ **Every claim stated with equal confidence?** Vary — be assertive on obvious points, tentative on uncertain ones
-- ✓ **Conclusion restates the paper's own contribution claim?** Replace with your own assessment
-- ✓ **Each paragraph in a section follows the same template?** Vary structure, let some papers share a paragraph
-- ✓ **Study results described without questioning methodology?** Add at least one "but what about..." or "N=12 is small"
+### Pass 2 — Second-Generation Patterns (A8-A12):
+- ✓ **Technical description covers every feature in order?** Skip something, zoom in unevenly, admit confusion about a detail (A8)
+- ✓ **"I think" only appears at paragraph openings?** Embed reactions mid-sentence, mention your own reading experience (A9)
+- ✓ **More than 2 em dashes per page?** Replace most with commas, periods, or parentheses (A10)
+- ✓ **Still says "falls into N camps"?** Reframe around a question or gap (A11)
+- ✓ **Every sentence roughly the same length/complexity?** Add breathing sentences, use fragments, vary paragraph length dramatically (A12)
+- ✓ **Every paragraph roughly the same length?** Include at least one 1-2 sentence paragraph per page (A12)
 
 ---
 
@@ -546,66 +941,6 @@ Provide:
 1. The rewritten text
 2. A brief summary of changes made (optional, if helpful)
 
----
-
-## Full Example (General)
-
-**Before (AI-sounding):**
-> Great question! Here is an essay on this topic. I hope this helps!
->
-> AI-assisted coding serves as an enduring testament to the transformative potential of large language models, marking a pivotal moment in the evolution of software development. In today's rapidly evolving technological landscape, these groundbreaking tools—nestled at the intersection of research and practice—are reshaping how engineers ideate, iterate, and deliver, underscoring their vital role in modern workflows.
->
-> At its core, the value proposition is clear: streamlining processes, enhancing collaboration, and fostering alignment. It's not just about autocomplete; it's about unlocking creativity at scale, ensuring that organizations can remain agile while delivering seamless, intuitive, and powerful experiences to users. The tool serves as a catalyst. The assistant functions as a partner. The system stands as a foundation for innovation.
->
-> Industry observers have noted that adoption has accelerated from hobbyist experiments to enterprise-wide rollouts, from solo developers to cross-functional teams. The technology has been featured in The New York Times, Wired, and The Verge. Additionally, the ability to generate documentation, tests, and refactors showcases how AI can contribute to better outcomes, highlighting the intricate interplay between automation and human judgment.
->
-> - 💡 **Speed:** Code generation is significantly faster, reducing friction and empowering developers.
-> - 🚀 **Quality:** Output quality has been enhanced through improved training, contributing to higher standards.
-> - ✅ **Adoption:** Usage continues to grow, reflecting broader industry trends.
->
-> While specific details are limited based on available information, it could potentially be argued that these tools might have some positive effect. Despite challenges typical of emerging technologies—including hallucinations, bias, and accountability—the ecosystem continues to thrive. In order to fully realize this potential, teams must align with best practices.
->
-> In conclusion, the future looks bright. Exciting times lie ahead as we continue this journey toward excellence. Let me know if you'd like me to expand on any section!
-
-**After (Humanized):**
-> AI coding assistants speed up some tasks. In a 2024 study by Google, developers using Codex completed simple functions 55% faster than a control group, but showed no improvement on debugging or architectural decisions.
->
-> The tools are good at boilerplate: config files, test scaffolding, repetitive refactors. They are bad at knowing when they are wrong. I have mass-accepted suggestions that compiled, passed lint, and still did the wrong thing because I stopped paying attention.
->
-> Mira, an engineer at a fintech startup I interviewed, said she uses Copilot "like autocomplete for boring code" but reviews every line before committing. Jake, a senior dev at a larger company, disabled it after it kept suggesting patterns from a deprecated internal library.
->
-> The productivity claims are hard to verify. GitHub says Copilot users "accept 30% of suggestions," but acceptance is not correctness, and correctness is not value. The 2024 Uplevel study found no statistically significant difference in pull-request throughput between teams with and without AI assistants.
->
-> None of this means the tools are useless. It means they are tools. They do not replace judgment, and they do not eliminate the need for tests. If you do not have tests, you cannot tell whether the suggestion is right.
-
----
-
-## Full Example (Academic — Paper Critique)
-
-**Before (AI — 99% GPTZero score):**
-> The paper draws on three areas of prior work. The first is NLI-based data analysis tools: systems that take natural language instructions and produce code or visualizations. ChatGPT's Advanced Data Analysis mode is the most widely used example. XNLI decomposes a single query into attributes, tasks, and visual encodings so users can see what the system decided. ColDeco pairs grounded abstraction matching with intermediate result views.
->
-> The second area is sense-making of data processing code. Datamation uses animation to show how data changes across operations. SOMNUS provides 23 static glyphs for wrangling operations at different granularities. Unravel converts operations into editable summary boxes with key parameters and table sizes. Pandas Tutor highlights selected rows and links them to their new positions after a transformation.
->
-> The third is UI design for human-LLM interaction. Graphologue turns LLM-generated text into interactive diagrams. AI Chains lets users pipe the output of one LLM step into the next. DynaVis synthesizes UI widgets on the fly for editing visualizations.
-
-**After (human — passes GPTZero):**
-> The related work that matters most here is Unravel. Both systems do the same thing at a high level — turn data wrangling code into visual summaries you can edit — but Unravel assumes you already have a complete script. That's the gap WaitGPT fills: it parses code as it arrives from the LLM, token by token. Whether the incremental parsing is technically hard or just an engineering detail is something the paper doesn't fully address, and I wish it did.
->
-> On the NL-to-analysis side, XNLI and ColDeco both try to make the system's decisions transparent, but they're designed for single queries. A user asks one question, gets one visualization, and can inspect what happened. WaitGPT handles multi-step workflows where the LLM chains together several operations, which is closer to how people actually use ChatGPT's data analysis mode in practice.
->
-> The Graphologue comparison is interesting but a bit of a stretch. Yes, both tools produce node-link diagrams from LLM output, but Graphologue is about structuring free-form text — it doesn't know what a DataFrame is. I think the authors included it mainly because the visual form looks similar.
-
-**Changes made:**
-- Broke the symmetric "three areas" framing — organized by relevance instead
-- Gave Unravel proportionally more space (it's the closest predecessor)
-- Added first-person reactions ("I wish it did", "I think the authors included it mainly because...")
-- Varied confidence levels (strong: "That's the gap"; tentative: "a bit of a stretch")
-- Bundled less-relevant works instead of giving each one a sentence
-- Questioned the paper's own choices (Graphologue comparison)
-- Varied paragraph length and structure
-
----
 
 ## Reference
 
@@ -613,6 +948,14 @@ This skill is based on [Wikipedia:Signs of AI writing](https://en.wikipedia.org/
 
 The academic writing patterns (A1-A7) are based on analysis of text flagged by GPTZero at 99% AI probability, where the writing was technically competent and free of obvious AI vocabulary but structurally identifiable as machine-generated due to uniform treatment of sources, missing first-person engagement, and template-parallel paragraph construction.
 
+The second-pass patterns (A8-A12) were discovered by applying A1-A7 to the same text, re-scanning with GPTZero, and finding that the score remained at 99% AI. The key discovery: **first-generation fixes (adding opinions, breaking catalogs) are necessary but not sufficient.** The text must also vary in information density, avoid exhaustive feature enumeration, and embed first-person voice organically rather than inserting it at structural boundaries.
+
 Key insight from Wikipedia: "LLMs use statistical algorithms to guess what should come next. The result tends toward the most statistically likely result that applies to the widest variety of cases."
 
 Key insight for academic writing: **The most detectable AI pattern in scholarly text is not word choice — it's the absence of a reader.** Human academic writing shows someone who read the papers, formed opinions, and decided what matters more than what. AI academic writing treats every source and every claim with exactly the same weight and structure.
+
+Key insight from v3.1 iteration: **The second most detectable pattern is uniform information density.** Even when a text has opinions and varied structure, if every sentence carries the same amount of information at the same complexity level, GPTZero flags it. Human writing breathes — dense stretches alternate with sparse reactions, long paragraphs alternate with short ones, and some sentences are fragments.
+
+Key insight from v3.2 iteration: **Pattern-level editing has a hard ceiling.** Three rounds of increasingly sophisticated humanization (v1→v3.0→v3.1) moved the GPTZero score from 99% → 99% → 100%. The fundamental issue is that GPTZero measures token probability distributions, not surface patterns. "AI edits AI" preserves the statistical fingerprint because the editing LLM selects high-probability tokens just as the generating LLM did. The only reliable strategy for passing statistical classifiers is to change who produces the base text: **human writes first, AI assists and polishes.**
+
+Key insight from v3.3 iteration: **Most users don't have a draft, and telling them "write one first" is unhelpful.** The guided interview solves this by using the AI as a structured interviewer that extracts the human's genuine thoughts through targeted questions. The human's casual, messy, opinionated answers become the draft — and because those token sequences originated from a human brain, they have genuinely different perplexity profiles from LLM-generated text. The AI's role shifts from ghostwriter to journalist: ask questions, record answers, organize them into the required format, and polish lightly without rewriting.
