@@ -1,11 +1,6 @@
 ---
 name: prompt-architect
-description: |
-  Transform vague user requirements into structured, high-quality prompts. Uses an
-  8-module framework (persona, objective, data grounding, writing style, visual design,
-  module structure, technical rules, quality bar) to diagnose gaps and iteratively
-  fill them. Triggers when the user says "help me write a prompt", "optimize this prompt",
-  "formalize my requirement", "design a prompt", or "this prompt isn't good enough".
+description: "Transform vague user requirements into structured, high-quality prompts. Uses an 8-module framework (persona, objective, data grounding, writing style, visual design, module structure, technical rules, quality bar) to diagnose gaps and iteratively fill them. Triggers when the user says \"help me write a prompt\", \"optimize this prompt\", \"formalize my requirement\", \"design a prompt\", or \"this prompt isn't good enough\"."
 allowed-tools:
   - Read
   - Write

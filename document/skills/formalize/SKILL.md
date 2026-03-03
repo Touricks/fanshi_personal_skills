@@ -1,11 +1,7 @@
 ---
 name: formalize
 version: 1.0.0
-description: >
-  Transform a rough, multilingual, or internally-annotated draft document into a
-  polished, submission-ready version. Use when the user says "clean up", "polish",
-  "make it ready for submission", or asks to remove a specific language, icons, or
-  internal annotations from a document.
+description: "Transform a rough, multilingual, or internally-annotated draft document into a polished, submission-ready version. Use when the user says \"clean up\", \"polish\", \"make it ready for submission\", or asks to remove a specific language, icons, or internal annotations from a document."
 allowed-tools:
   - Read
   - Write

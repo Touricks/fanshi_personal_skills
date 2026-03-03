@@ -1,42 +1,7 @@
 ---
 name: humanizer
 version: 3.3.0
-description: |
-  Remove signs of AI-generated writing from text. Use when editing or reviewing
-  text to make it sound more natural and human-written. Based on Wikipedia's
-  comprehensive "Signs of AI writing" guide. Detects and fixes patterns including:
-  inflated symbolism, promotional language, superficial -ing analyses, vague
-  attributions, em dash overuse, rule of three, AI vocabulary words, negative
-  parallelisms, and excessive conjunctive phrases.
-
-  v3.0 adds: Academic writing patterns (literature reviews, paper critiques,
-  research summaries) that evade general-purpose detection but trigger GPTZero
-  and similar classifiers. Covers catalog-style lit reviews, over-clean
-  categorization, uniform confidence, missing first-person engagement, and
-  template-parallel paragraph structures.
-
-  v3.1 adds: Second-pass patterns discovered after applying v3.0 and re-scanning
-  with GPTZero (still 99% AI). Covers exhaustive technical description,
-  formulaic first-person insertions, em dash density in academic LaTeX,
-  N-camps reframing trap, and burstiness/information-density uniformity.
-  These are "second-generation" AI tells — they appear in text that has
-  already been humanized once but still triggers classifiers.
-
-  v3.2 adds: THE PERPLEXITY CEILING — the fundamental discovery that
-  pattern-level editing of AI text has a hard ceiling. GPTZero uses statistical
-  models that detect the probability distribution of token sequences, not
-  individual sentences. "AI edits AI" retains the statistical fingerprint
-  regardless of surface changes. This version adds a PROCESS-LEVEL strategy:
-  human-first drafting, perplexity injection, structural noise, and a
-  collaborative workflow where AI assists human writing rather than the reverse.
-
-  v3.3 adds: GUIDED INTERVIEW MODE — an interactive Q&A workflow that uses
-  AskUserQuestion to extract the human's genuine thoughts about a paper before
-  any writing begins. The AI acts as a structured interviewer across 4 rounds
-  (first impression, technical engagement, critical analysis, personal connection),
-  then assembles the human's own words into a draft. This is the most reliable
-  method for producing text that passes statistical classifiers, because the
-  core token sequences originate from the human.
+description: "Remove signs of AI-generated writing from text. Use when editing or reviewing text to make it sound more natural and human-written. Based on Wikipedia's comprehensive \"Signs of AI writing\" guide. Detects and fixes patterns including: inflated symbolism, promotional language, superficial -ing analyses, vague attributions, em dash overuse, rule of three, AI vocabulary words, negative parallelisms, and excessive conjunctive phrases.\n\nv3.0 adds: Academic writing patterns (literature reviews, paper critiques, research summaries) that evade general-purpose detection but trigger GPTZero and similar classifiers. Covers catalog-style lit reviews, over-clean categorization, uniform confidence, missing first-person engagement, and template-parallel paragraph structures.\n\nv3.1 adds: Second-pass patterns discovered after applying v3.0 and re-scanning with GPTZero (still 99% AI). Covers exhaustive technical description, formulaic first-person insertions, em dash density in academic LaTeX, N-camps reframing trap, and burstiness/information-density uniformity. These are \"second-generation\" AI tells \u2014 they appear in text that has already been humanized once but still triggers classifiers.\n\nv3.2 adds: THE PERPLEXITY CEILING \u2014 the fundamental discovery that pattern-level editing of AI text has a hard ceiling. GPTZero uses statistical models that detect the probability distribution of token sequences, not individual sentences. \"AI edits AI\" retains the statistical fingerprint regardless of surface changes. This version adds a PROCESS-LEVEL strategy: human-first drafting, perplexity injection, structural noise, and a collaborative workflow where AI assists human writing rather than the reverse.\n\nv3.3 adds: GUIDED INTERVIEW MODE \u2014 an interactive Q&A workflow that uses AskUserQuestion to extract the human's genuine thoughts about a paper before any writing begins. The AI acts as a structured interviewer across 4 rounds (first impression, technical engagement, critical analysis, personal connection), then assembles the human's own words into a draft. This is the most reliable method for producing text that passes statistical classifiers, because the core token sequences originate from the human."
 allowed-tools:
   - Read
   - Write

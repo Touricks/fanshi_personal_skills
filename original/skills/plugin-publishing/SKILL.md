@@ -1,8 +1,18 @@
+---
+name: plugin-publishing
+description: "Guide for packaging local skills as Cowork Plugins and publishing them to a GitHub marketplace for cross-project, cross-device installation and reuse."
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Glob
+  - Grep
+---
+
 # Plugin Publishing Skill
 
 本 skill 用于指导如何将本地 skills 打包为 Cowork Plugin 并发布到 GitHub marketplace，使其可被跨项目、跨设备安装复用。
-
----
 
 ## 核心概念
 

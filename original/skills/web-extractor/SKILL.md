@@ -1,15 +1,6 @@
 ---
 name: web-extractor
-description: >
-  Extract complete text content from web pages using Claude in Chrome, handling
-  JavaScript-rendered content, lazy-loaded pages, virtual scrolling, SPAs, and
-  canvas-rendered content (Unity WebGL, Unreal, custom WebGL/WebGPU apps).
-  Use this skill whenever the user wants to: scrape a web page, extract text from
-  a URL, save web page content to a file, read a web document, or capture content
-  from any dynamically-loaded website. Trigger especially when WebFetch fails
-  (403, requires auth, JS-rendered) and the user has Chrome connected. Also use
-  when the user mentions extracting content from sites like Google Docs, Notion,
-  飞书, 轻雀文档, Confluence, Unity WebGL builds, or any SPA/JS-heavy/canvas-heavy site.
+description: "Extract complete text content from web pages using Claude in Chrome, handling JavaScript-rendered content, lazy-loaded pages, virtual scrolling, SPAs, and canvas-rendered content (Unity WebGL, Unreal, custom WebGL/WebGPU apps). Use this skill whenever the user wants to: scrape a web page, extract text from a URL, save web page content to a file, read a web document, or capture content from any dynamically-loaded website. Trigger especially when WebFetch fails (403, requires auth, JS-rendered) and the user has Chrome connected. Also use when the user mentions extracting content from sites like Google Docs, Notion, 飞书, 轻雀文档, Confluence, Unity WebGL builds, or any SPA/JS-heavy/canvas-heavy site."
 ---
 
 # Web Extractor

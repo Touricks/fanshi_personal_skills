@@ -1,11 +1,6 @@
 ---
 name: push
-description: |
-  Stage, commit, and push all current changes to the remote with a human-readable
-  summary and user approval before executing. Use when the user says "push",
-  "push to github", "push all changes", "commit and push", "check status and push",
-  "send this to remote", or "ship it". Does NOT create branches or pull requests —
-  pushes to the current branch only.
+description: "Stage, commit, and push all current changes to the remote with a human-readable summary and user approval before executing. Use when the user says \"push\", \"push to github\", \"push all changes\", \"commit and push\", \"check status and push\", \"send this to remote\", or \"ship it\". Does NOT create branches or pull requests \u2014 pushes to the current branch only."
 allowed-tools:
   - Bash(git status:*)
   - Bash(git diff:*)
