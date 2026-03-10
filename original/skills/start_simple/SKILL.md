@@ -1,9 +1,9 @@
 ---
-name: start
+name: start_simple
 description: Bootstrap a new project with CLAUDE.md and PROGRESS.md. Use when the user runs /start, says "initialize project", "set up claude.md", or wants to create the external memory system for a new or existing project. Handles both existing projects (auto-detect and populate) and empty folders (provide guided templates).
 ---
 
-# /start — Project Bootstrap
+# /start_simple — Project Bootstrap
 
 ## Workflow
 
