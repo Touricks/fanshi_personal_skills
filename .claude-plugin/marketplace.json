@@ -13,6 +13,11 @@
       "name": "document",
       "description": "Document processing skills: draft-to-clean transformation, formalization, and polishing.",
       "source": "./document"
+    },
+    {
+      "name": "sentinel",
+      "description": "Project lifecycle skills: bootstrap, routing, boundary, progress tracking, sentinel-loop iteration, export, and Codex second opinions.",
+      "source": "./sentinel"
     }
   ]
 }
