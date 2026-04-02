@@ -1,0 +1,5 @@
+{
+  "name": "ant_prompt",
+  "description": "Anthropic-internal coding standards as Claude Code hooks: comment discipline, completion verification, faithful reporting, and length limits.",
+  "version": "1.0.0"
+}

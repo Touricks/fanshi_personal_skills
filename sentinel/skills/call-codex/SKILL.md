@@ -9,21 +9,25 @@ Invoke OpenAI Codex CLI non-interactively to get a second opinion or critique, t
 
 ## Command Pattern
 
+Each invocation MUST use a unique output file to prevent stale-output bugs:
+
 ```bash
-cat <<'PROMPT' | codex exec --full-auto --skip-git-repo-check -o /tmp/codex_output.md -
+CODEX_OUT="/tmp/codex_output_$(date +%s).md"
+cat <<'PROMPT' | codex exec --full-auto --skip-git-repo-check -o "$CODEX_OUT" -
 <your prompt here>
 Do NOT modify any files. Do NOT run any shell commands. Only output your analysis as text.
 PROMPT
 ```
 
-Then read `/tmp/codex_output.md` for the clean response.
+Then read `$CODEX_OUT` for the clean response.
 
 ## Workflow
 
 1. **Construct the prompt.** Combine the user's request with relevant context (file contents, code snippets, error messages). Always append: `Do NOT modify any files. Do NOT run any shell commands. Only output your analysis as text.`
-2. **Run the command.** Use `cat <<'PROMPT' | codex exec --full-auto --skip-git-repo-check -o /tmp/codex_output.md -` with the constructed prompt. Use single-quoted heredoc delimiter (`'PROMPT'`) to prevent shell expansion.
-3. **Read the output.** Read `/tmp/codex_output.md` for Codex's response. The `-o` file contains only the agent's final message (stdout includes session metadata).
-4. **Present the result.** Summarize or relay Codex's response to the user. If the user asked for a comparison, contrast Codex's view with your own.
+2. **Generate a unique output path.** Use `CODEX_OUT="/tmp/codex_output_$(date +%s).md"` to avoid reading stale output from a previous invocation.
+3. **Run the command.** Use `cat <<'PROMPT' | codex exec --full-auto --skip-git-repo-check -o "$CODEX_OUT" -` with the constructed prompt. Use single-quoted heredoc delimiter (`'PROMPT'`) to prevent shell expansion. **IMPORTANT:** Do NOT use `run_in_background`. Wait for the command to complete before proceeding.
+4. **Read the output.** Read the file at `$CODEX_OUT` for Codex's response. The `-o` file contains only the agent's final message (stdout includes session metadata). **Never read `/tmp/codex_output.md` directly** — always use the unique path from step 2.
+5. **Present the result.** Summarize or relay Codex's response to the user. If the user asked for a comparison, contrast Codex's view with your own.
 
 ## Key Flags
 
@@ -32,7 +36,7 @@ Then read `/tmp/codex_output.md` for the clean response.
 | `exec` | Non-interactive subcommand (required for scripted use) |
 | `--full-auto` | Skips confirmation prompts (alias for `-a on-request --sandbox workspace-write`) |
 | `--skip-git-repo-check` | Run outside or independent of current git repo |
-| `-o /tmp/codex_output.md` | Write final message to file for clean reading |
+| `-o "$CODEX_OUT"` | Write final message to a unique file for clean reading (use `date +%s` suffix) |
 | `-` (trailing) | Read prompt from stdin (avoids shell quoting issues) |
 
 ## Optional Flags
@@ -47,22 +51,24 @@ User asks: "Ask codex to review my sort function in utils.py"
 1. Read `utils.py` to get the sort function code
 2. Run:
 ```bash
-cat <<'PROMPT' | codex exec --full-auto --skip-git-repo-check -o /tmp/codex_output.md -
+CODEX_OUT="/tmp/codex_output_$(date +%s).md"
+cat <<'PROMPT' | codex exec --full-auto --skip-git-repo-check -o "$CODEX_OUT" -
 Review the following Python sort function for correctness, efficiency, and style:
 
-```python
 <contents of the sort function>
-```
 
 Do NOT modify any files. Do NOT run any shell commands. Only output your critique as text.
 PROMPT
 ```
-3. Read `/tmp/codex_output.md`
+3. Read the file at `$CODEX_OUT` (the unique path generated in step 2)
 4. Present Codex's feedback to the user
 
 ## Important Notes
 
+- **NEVER use a fixed output path** like `/tmp/codex_output.md`. Always generate a unique path with a timestamp suffix (`date +%s`) to prevent reading stale output from a previous invocation.
+- **NEVER use `run_in_background`** for the codex command. The output file must be fully written before you read it. Running in background causes a race condition where you read the previous session's output.
 - Always include the safety instruction ("Do NOT modify any files...") since `--full-auto` grants write access to the sandbox.
 - Use single-quoted heredoc delimiter `'PROMPT'` to prevent `$variable` expansion and `` `backtick` `` execution in the prompt text.
 - If `codex` is not found, inform the user to install it (`brew install codex` or see OpenAI docs).
 - Token usage is printed to stdout at the end of the session.
+- If the output seems unrelated to your prompt, suspect stale output — delete the file and re-run.

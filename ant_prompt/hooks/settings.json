@@ -1,0 +1,53 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOOKS_DIR/session-start-guidance.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOOKS_DIR/post-edit-comments.sh",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOOKS_DIR/post-edit-comments.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOOKS_DIR/stop-verify-completion.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "$HOOKS_DIR/stop-check-length.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
