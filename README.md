@@ -23,7 +23,6 @@ A Claude Code plugin marketplace containing curated skill collections for ML wri
 │   └── skills/
 └── ant_prompt/
     ├── .claude-plugin/plugin.json
-    ├── hooks/                    # Source hook scripts
     └── skills/
 ```
 

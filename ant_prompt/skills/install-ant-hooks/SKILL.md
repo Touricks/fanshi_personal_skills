@@ -9,21 +9,18 @@ Installs 4 hook scripts that replicate Anthropic-internal (`USER_TYPE=ant`) codi
 
 ## Procedure
 
-### Phase 1: Locate Source Hooks
+### Phase 1: Locate Source Assets
 
-Find the `ant_prompt/hooks/` directory containing the source scripts.
+The hook scripts are bundled as assets alongside this SKILL.md.
 
-1. Use Glob to search for `**/ant_prompt/hooks/session-start-guidance.sh`
-2. If multiple matches, prefer the path under the plugin installation or marketplace directory
-3. If not found, search `~/.claude/` recursively
-4. If still not found, use AskUserQuestion to ask the user for the path
-5. Store the directory as `SOURCE_DIR`
-6. Verify all 4 scripts exist in `SOURCE_DIR`:
+1. Find the `assets/` directory relative to this skill — use Glob for `**/install-ant-hooks/assets/session-start-guidance.sh`
+2. Store the directory as `ASSETS_DIR`
+3. Verify all 5 files exist in `ASSETS_DIR`:
    - `session-start-guidance.sh`
    - `post-edit-comments.sh`
    - `stop-verify-completion.sh`
    - `stop-check-length.sh`
-7. Verify `settings.json` template exists in `SOURCE_DIR`
+   - `settings.json`
 
 ### Phase 2: Check Prerequisites
 
@@ -42,18 +39,18 @@ Find the `ant_prompt/hooks/` directory containing the source scripts.
 
 ### Phase 4: Copy Scripts
 
-1. Copy all 4 `.sh` files from `SOURCE_DIR` to `.claude/hooks/`:
+1. Copy all 4 `.sh` files from `ASSETS_DIR` to `.claude/hooks/`:
    ```
-   cp SOURCE_DIR/session-start-guidance.sh .claude/hooks/
-   cp SOURCE_DIR/post-edit-comments.sh .claude/hooks/
-   cp SOURCE_DIR/stop-verify-completion.sh .claude/hooks/
-   cp SOURCE_DIR/stop-check-length.sh .claude/hooks/
+   cp ASSETS_DIR/session-start-guidance.sh .claude/hooks/
+   cp ASSETS_DIR/post-edit-comments.sh .claude/hooks/
+   cp ASSETS_DIR/stop-verify-completion.sh .claude/hooks/
+   cp ASSETS_DIR/stop-check-length.sh .claude/hooks/
    ```
 2. Make them executable: `chmod +x .claude/hooks/*.sh`
 
 ### Phase 5: Build & Merge Hook Config
 
-1. Read `SOURCE_DIR/settings.json` (the template)
+1. Read `ASSETS_DIR/settings.json` (the template)
 2. Resolve `HOOKS_DIR` to the absolute path of `.claude/hooks` in the current project:
    ```
    HOOKS_DIR="$(cd .claude/hooks && pwd)"
