@@ -5,7 +5,7 @@ description: Install Anthropic-internal coding standard hooks into the current p
 
 # Install Ant-Mode Hooks
 
-Installs 4 hook scripts that replicate Anthropic-internal (`USER_TYPE=ant`) coding standards into the current project as project-scoped Claude Code hooks.
+Installs 4 hook scripts that replicate 7 Anthropic-internal (`USER_TYPE=ant`) coding standards into the current project as project-scoped Claude Code hooks.
 
 ## Procedure
 
@@ -97,7 +97,7 @@ Ant-mode hooks installed successfully.
 Restart your Claude Code session for hooks to take effect.
 ```
 
-## The 6 Coding Standards
+## The 7 Coding Standards
 
 1. **Comment Discipline** — No comments by default; only WHY, never WHAT
 2. **Assertiveness** — Speak up about misconceptions and adjacent bugs
@@ -105,6 +105,7 @@ Restart your Claude Code session for hooks to take effect.
 4. **Faithful Reporting** — Never misrepresent test results
 5. **Communication Style** — Flowing prose, inverted pyramid, match expertise
 6. **Length Limits** — 25 words between tools, 100 words final response
+7. **Commit & PR Hygiene** — Never include model codenames, version numbers, "Claude Code", or Co-Authored-By lines in commits/PRs
 
 ## Customization
 
