@@ -6,8 +6,8 @@ A Claude Code plugin marketplace containing curated skill collections for ML wri
 
 | Plugin | Description | Skills |
 |--------|-------------|--------|
-| **original** | General-purpose skill collection | 19 — ml-paper-writing, scientific-slides, latex-posters, pdf, docx, xlsx, humanizer, web-extractor, push, skill-creator, plugin-publishing, and more |
-| **sentinel** | Project lifecycle management | 7 — start, routing, boundary, progress, sentinel-loop, sentinel-export, call-codex |
+| **original** | General-purpose skill collection | 14 — ml-paper-writing, scientific-slides, latex-posters, humanizer-zh, web-extractor, push, plugin-publishing, langgraph, langchain-architecture, claude-d3js-skill, start_simple, tailored-resume-generator, study-notes-generator, and more |
+| **sentinel** | Project lifecycle management | 9 — start, routing, boundary, progress, sentinel-loop, sentinel-export, call-codex, submit-issue, skill-creator |
 | **ant_prompt** | Anthropic-internal coding standards as hooks | 2 — install-ant-hooks, remove-ant-hooks |
 
 ## Structure
@@ -56,4 +56,4 @@ claude plugin add https://github.com/Touricks/fanshi_personal_skills.git
 4. Optionally add `scripts/`, `references/`, or `assets/` subdirectories
 5. Bump the plugin's `version` in `.claude-plugin/plugin.json`
 
-See the `skill-creator` skill in the original plugin for detailed guidance.
+Use the `sentinel:skill-creator` skill to audit skill quality, or `skill-creator:skill-creator` (marketplace) to create new skills.
