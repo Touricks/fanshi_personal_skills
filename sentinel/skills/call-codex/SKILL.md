@@ -1,6 +1,17 @@
 ---
 name: call-codex
-description: Ask OpenAI Codex CLI for a second opinion, critique, or analysis from within a Claude Code session. Use when the user says "ask codex", "call codex", "get codex's opinion", "second opinion from codex", "codex review", or wants to consult Codex on code, architecture, or any technical question. Requires codex-cli installed (`codex` binary available in PATH).
+description: >-
+  Invoke OpenAI Codex CLI (GPT-5.4) non-interactively to get a second opinion,
+  critique, or real-time web search from within a Claude Code session.
+  Use when the user says "ask codex", "call codex", "get codex's opinion",
+  "second opinion from codex", "codex review", or wants to consult Codex on
+  code, architecture, or any technical question.
+  CRITICAL ROUTING RULE: When the user wants Codex to perform a web search
+  (current info, latest versions, recent news), ALWAYS use this skill
+  (--search flag) — never codex:rescue, which cannot do web search.
+  Input: natural-language question, optionally with code context, via stdin heredoc.
+  Output: plain-text analysis from a temp file (or structured JSON via --output-schema).
+  Requires codex-cli installed (`codex` binary in PATH, auth via `codex login`).
 ---
 
 # Call Codex (Hardened)
