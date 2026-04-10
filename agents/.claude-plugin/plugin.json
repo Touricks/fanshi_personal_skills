@@ -1,0 +1,5 @@
+{
+  "name": "agents",
+  "description": "Presentation generation agent: PPT Master with templates, design specs, image pipelines, and multi-style slide creation.",
+  "version": "1.0.0"
+}

@@ -5,9 +5,24 @@
   },
   "plugins": [
     {
-      "name": "original",
-      "description": "Original personal skill collection: ML paper writing, scientific slides, LaTeX posters, humanizer, web extraction, and more.",
-      "source": "./original"
+      "name": "agents",
+      "description": "Presentation generation agent: PPT Master with templates, design specs, image pipelines, and multi-style slide creation.",
+      "source": "./agents"
+    },
+    {
+      "name": "documents",
+      "description": "Academic writing and document generation: ML paper writing, scientific slides, LaTeX posters, study notes, and tailored resume generation.",
+      "source": "./documents"
+    },
+    {
+      "name": "general",
+      "description": "General-purpose utilities: skill discovery, Chinese text humanization, plugin publishing, git push workflow, project bootstrapping, and web content extraction.",
+      "source": "./general"
+    },
+    {
+      "name": "techstack",
+      "description": "Technical stack skills: D3.js interactive visualizations, LangChain 1.x architecture, and LangGraph stateful agent workflows.",
+      "source": "./techstack"
     },
     {
       "name": "sentinel",

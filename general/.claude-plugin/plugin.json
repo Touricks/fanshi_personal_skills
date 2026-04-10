@@ -1,0 +1,5 @@
+{
+  "name": "general",
+  "description": "General-purpose utilities: skill discovery, Chinese text humanization, plugin publishing, git push workflow, project bootstrapping, and web content extraction.",
+  "version": "1.0.0"
+}
