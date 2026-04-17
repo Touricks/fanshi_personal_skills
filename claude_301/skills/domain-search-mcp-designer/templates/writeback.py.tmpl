@@ -1,0 +1,101 @@
+"""Structured writeback for $domain_name.
+
+Reads all per-source summaries under .search-scratchpad/<qhash>/ and
+emits a single markdown report with:
+
+  - one `## <title>` section per source
+  - a trailing `## Sources` section listing every (URL, title) pair as
+    markdown hyperlinks
+
+This mirrors the CRITICAL REQUIREMENT at
+reference/src/tools/WebSearchTool/prompt.ts:14-24 — every report MUST
+include a Sources section; skipping it is not permitted.
+
+The writeback also validates that any ≥ 15-word verbatim span in a
+summary is inside quotation marks, flagging possible unquoted excerpts
+per reference/src/tools/WebFetchTool/prompt.ts:28-34.
+"""
+
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass
+from pathlib import Path
+from typing import List
+
+from $server_pkg.scratchpad import SCRATCHPAD_ROOT, _qhash
+
+_FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n\n", re.DOTALL)
+_LONG_SPAN_RE = re.compile(r"([^\"“”\n]{80,})")  # heuristic: long unquoted runs
+
+
+@dataclass
+class SourceEntry:
+    url: str
+    title: str
+    body: str
+
+
+def _parse(path: Path) -> SourceEntry:
+    raw = path.read_text()
+    m = _FRONTMATTER_RE.match(raw)
+    if not m:
+        raise ValueError(f"{path} is missing the required front-matter block.")
+    fields = {}
+    for line in m.group(1).splitlines():
+        if ":" in line:
+            k, v = line.split(":", 1)
+            fields[k.strip()] = v.strip()
+    body = raw[m.end():]
+    return SourceEntry(
+        url=fields.get("source_url", ""),
+        title=fields.get("source_title", "") or fields.get("source_url", "(untitled)"),
+        body=body.rstrip() + "\n",
+    )
+
+
+def _check_quotations(entries: List[SourceEntry]) -> List[str]:
+    """Return human-readable warnings for long unquoted spans."""
+    warnings: List[str] = []
+    for e in entries:
+        for match in _LONG_SPAN_RE.finditer(e.body):
+            span = match.group(1).strip()
+            words = span.split()
+            if len(words) >= 15:
+                warnings.append(
+                    f"{e.url}: long unquoted span ({len(words)} words) — "
+                    f"wrap verbatim excerpts in quotation marks."
+                )
+    return warnings
+
+
+def write_report(query: str, target_path: str | Path) -> Path:
+    qhash = _qhash(query)
+    scratch = SCRATCHPAD_ROOT / qhash
+    if not scratch.exists():
+        raise FileNotFoundError(f"No scratchpad for query {query!r}")
+
+    files = sorted(scratch.glob("[0-9][0-9][0-9]-*.md"))
+    entries = [_parse(p) for p in files]
+    warnings = _check_quotations(entries)
+
+    body_sections: List[str] = [f"# Report: {query}\n"]
+    if warnings:
+        body_sections.append("> **Attribution warnings:**")
+        for w in warnings:
+            body_sections.append(f"> - {w}")
+        body_sections.append("")
+
+    for e in entries:
+        body_sections.append(f"## {e.title}\n\n{e.body}")
+
+    # Mandatory Sources section — mirrors WebSearchTool/prompt.ts:14-24.
+    body_sections.append("## Sources")
+    for e in entries:
+        body_sections.append(f"- [{e.title}]({e.url})")
+    body_sections.append("")
+
+    out = Path(target_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("\n".join(body_sections))
+    return out

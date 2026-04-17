@@ -1,0 +1,109 @@
+"""Per-search scratchpad for $domain_name.
+
+Each top-level search gets a directory keyed by a short hash of the query.
+Sub-agents (or tool calls) drop individual summary files inside. The
+writeback tool reads them back to produce a single attribution-preserving
+report. This is the claim-source mapping container from Task 5.6 S1 of the
+Claude 301 review.
+
+Layout:
+
+  .search-scratchpad/
+    <qhash>/
+      meta.json                 # ScratchpadMeta
+      001-<host>.md             # per-source summary, with front-matter URL
+      002-<host>.md
+      ...
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import time
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import List
+from urllib.parse import urlparse
+
+from $server_pkg.schemas import ScratchpadMeta
+
+SCRATCHPAD_ROOT = Path(".search-scratchpad")
+
+
+def _qhash(query: str) -> str:
+    return hashlib.sha1(query.encode("utf-8")).hexdigest()[:10]
+
+
+def _host(url: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", urlparse(url).netloc.lower()).strip("-") or "unknown"
+
+
+def init_scratchpad(query: str, translated_query: str, backend: str) -> Path:
+    """Create the per-query directory and meta.json. Idempotent."""
+    qhash = _qhash(query)
+    target = SCRATCHPAD_ROOT / qhash
+    target.mkdir(parents=True, exist_ok=True)
+    meta = ScratchpadMeta(
+        query=query,
+        translated_query=translated_query,
+        query_hash=qhash,
+        backend=backend,
+    )
+    (target / "meta.json").write_text(meta.model_dump_json(indent=2))
+    return target
+
+
+def append_summary(
+    query: str, source_url: str, source_title: str, body: str
+) -> Path:
+    """Write a single summary file. Caller guarantees `body` already
+    includes quotation marks around any verbatim spans (the writeback tool
+    re-validates this before producing the final report)."""
+    qhash = _qhash(query)
+    target = SCRATCHPAD_ROOT / qhash
+    if not target.exists():
+        raise FileNotFoundError(
+            f"Scratchpad for {qhash!r} not initialized — call init_scratchpad first."
+        )
+    existing = sorted(target.glob("[0-9][0-9][0-9]-*.md"))
+    n = len(existing) + 1
+    path = target / f"{n:03d}-{_host(source_url)}.md"
+    front = (
+        f"---\n"
+        f"source_url: {source_url}\n"
+        f"source_title: {source_title}\n"
+        f"written_at: {datetime.utcnow().isoformat()}\n"
+        f"---\n\n"
+    )
+    path.write_text(front + body)
+    return path
+
+
+def list_summaries(query: str) -> List[Path]:
+    qhash = _qhash(query)
+    target = SCRATCHPAD_ROOT / qhash
+    if not target.exists():
+        return []
+    return sorted(target.glob("[0-9][0-9][0-9]-*.md"))
+
+
+def gc(older_than: timedelta = timedelta(days=7)) -> int:
+    """Remove per-query directories older than the cutoff. Returns count."""
+    if not SCRATCHPAD_ROOT.exists():
+        return 0
+    cutoff = time.time() - older_than.total_seconds()
+    removed = 0
+    for d in SCRATCHPAD_ROOT.iterdir():
+        if not d.is_dir():
+            continue
+        meta = d / "meta.json"
+        if not meta.exists():
+            continue
+        if meta.stat().st_mtime < cutoff:
+            for p in d.iterdir():
+                p.unlink()
+            d.rmdir()
+            removed += 1
+    return removed

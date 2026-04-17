@@ -33,6 +33,12 @@
       "name": "ant_prompt",
       "description": "Anthropic-internal coding standards as Claude Code hooks: comment discipline, completion verification, faithful reporting, and length limits.",
       "source": "./ant_prompt"
+    },
+    {
+      "name": "claude_301",
+      "description": "Claude 301 exam preparation skills: study content generation, review management, and skill scaffolding.",
+      "source": "./claude_301"
     }
   ]
 }
+

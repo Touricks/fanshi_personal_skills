@@ -1,0 +1,133 @@
+"""$domain_name search MCP server.
+
+Exposes three tools:
+
+  - search(query, limit)          -> list[SearchResult]
+  - fetch_detail(url)             -> DetailResult
+  - summarize_to_file(query,      -> path: str
+                      target_path)
+
+Auth model: the user's browser session supplies cookies. This server
+does NOT perform login. See references/playwright-vs-claude-in-chrome.md
+for the credential-storage surface (TODO for downstream developers).
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import List
+
+from fastmcp import FastMCP
+
+from $server_pkg.schemas import DetailResult, SearchResult
+from $server_pkg.scratchpad import append_summary, init_scratchpad
+from $server_pkg.translator import translate
+from $server_pkg.writeback import write_report
+
+BACKEND = "$browser_backend"
+DOMAIN_HOST = "$domain_host"
+
+# TODO: set a rate-limit policy appropriate for $domain_name. Different
+# sites have different anti-scraping postures; LinkedIn blocks at ~5
+# requests/minute while Wikipedia accepts hundreds. Tune before production.
+SEARCH_RATE_LIMIT_PER_MINUTE = 10
+
+mcp = FastMCP("$server_pkg")
+
+
+# <<IF browser=playwright>>
+# --- Playwright MCP bridge ---------------------------------------------------
+# The server delegates actual browser work to the Playwright MCP server
+# running as a sibling process. Register both servers in your MCP client;
+# this server issues browser_navigate / browser_snapshot / browser_evaluate
+# tool calls and parses the returned DOM snapshots.
+#
+# Auth: point PLAYWRIGHT_STORAGE_STATE at a JSON file you produced via
+#     playwright codegen --save-storage=state.json https://$domain_host
+# The Playwright MCP server will pick it up on startup.
+#
+# TODO: credential storage — storage_state.json expires. Decide on a
+# refresh cadence and where to keep the file. See
+# references/playwright-vs-claude-in-chrome.md#auth-surface.
+async def _browser_search(translated_query: str, limit: int) -> List[dict]:
+    # TODO: implement via Playwright MCP client calls. The shape is:
+    #   await playwright.browser_navigate(url=f"https://{DOMAIN_HOST}/search?q={translated_query}")
+    #   snapshot = await playwright.browser_snapshot()
+    #   return _parse_search_results(snapshot, limit)
+    raise NotImplementedError(
+        "Wire Playwright MCP calls here. Selectors are domain-specific."
+    )
+# <<ENDIF>>
+# <<IF browser=claude_in_chrome>>
+# --- Claude-in-Chrome bridge -------------------------------------------------
+# The server delegates to the Claude-in-Chrome MCP server, which drives the
+# user's already-logged-in Chrome. This is the FALLBACK path: it "just works"
+# for sites where Playwright storage-state is hard to produce (region-locked,
+# aggressive bot detection), at the cost of tighter security boundaries —
+# every site the user is logged into is reachable by this server.
+#
+# Document this clearly to end users. See
+# references/playwright-vs-claude-in-chrome.md for the tradeoff.
+#
+# TODO: credential storage — none required for this backend, but the user's
+# browser session must remain unlocked while the server runs.
+async def _browser_search(translated_query: str, limit: int) -> List[dict]:
+    # TODO: implement via Claude-in-Chrome MCP tool calls.
+    raise NotImplementedError(
+        "Wire Claude-in-Chrome MCP calls here. Selectors are domain-specific."
+    )
+# <<ENDIF>>
+
+
+@mcp.tool()
+async def search(query: str, limit: int = 10) -> List[SearchResult]:
+    """Search $domain_name for `query`. The query is translated from English
+    to $primary_lang before hitting the site. Returns at most `limit` hits
+    as SearchResult objects (title, url, snippet, source_language,
+    retrieved_at).
+
+    The writeback tool depends on every hit having a stable url + title —
+    do not replace SearchResult with an ad-hoc dict.
+    """
+    translated = translate(query)
+    init_scratchpad(query=query, translated_query=translated, backend=BACKEND)
+    raw = await _browser_search(translated, limit)
+    return [SearchResult(**hit) for hit in raw[:limit]]
+
+
+@mcp.tool()
+async def fetch_detail(url: str) -> DetailResult:
+    """Fetch the full page at `url` and extract body + quotations.
+
+    Verbatim excerpts longer than 125 characters are not permitted — callers
+    should paraphrase or truncate. See
+    reference/src/tools/WebFetchTool/prompt.ts:28-34.
+    """
+    # TODO: fetch via the selected browser backend and extract content.
+    raise NotImplementedError
+
+
+@mcp.tool()
+async def summarize_to_file(
+    query: str, target_path: str, source_url: str, source_title: str, body: str
+) -> str:
+    """Append a per-source summary to the scratchpad for `query`, then
+    regenerate the aggregate report at `target_path`.
+
+    `body` is the summary text for this single source. The aggregate report
+    at `target_path` will contain a mandatory `## Sources` section listing
+    every (url, title) pair — see writeback.py.
+    """
+    append_summary(
+        query=query, source_url=source_url, source_title=source_title, body=body
+    )
+    out = write_report(query, target_path)
+    return str(out)
+
+
+def main() -> None:
+    mcp.run()
+
+
+if __name__ == "__main__":
+    main()

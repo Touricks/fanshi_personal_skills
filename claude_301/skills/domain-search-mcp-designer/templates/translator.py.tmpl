@@ -1,0 +1,100 @@
+"""Query translator for $domain_name.
+
+Upstream agents typically send English queries. $domain_name indexes content
+in $primary_lang, so we translate before hitting the site's search.
+
+Three strategies are provided. `scaffold.py` selected `$translator_mode` at
+scaffold time — the other two are kept here as references. Swap the
+`TRANSLATOR` assignment at the bottom to switch strategies.
+
+TODO: tune translation for $domain_name-specific jargon (slang, brand names,
+location expressions). The llm stub in particular needs a domain-specific
+system prompt before production use.
+"""
+
+from __future__ import annotations
+
+from typing import Protocol
+
+
+class Translator(Protocol):
+    def translate(self, query: str, target: str = "$primary_lang") -> str: ...
+
+
+class IdentityTranslator:
+    """Pass-through. Use when upstream queries are already in $primary_lang."""
+
+    def translate(self, query: str, target: str = "$primary_lang") -> str:
+        return query
+
+
+class DictionaryTranslator:
+    """Local lookup translator.
+
+    Good when queries draw from a small, closed vocabulary (POI categories,
+    cuisine names, neighborhood names). Cheap and deterministic.
+
+    TODO: populate DICT with domain-appropriate terms. The entries below are
+    illustrative only.
+    """
+
+    DICT = {
+        "ramen": "拉面",
+        "late-night": "深夜",
+        "brooklyn": "布鲁克林",
+        # TODO: extend for $domain_name
+    }
+
+    def translate(self, query: str, target: str = "$primary_lang") -> str:
+        tokens = query.lower().split()
+        return " ".join(self.DICT.get(t, t) for t in tokens)
+
+
+class LLMTranslator:
+    """LLM-backed translator.
+
+    Call a downstream model (Claude, GPT, a local open model) with a
+    domain-aware system prompt. Handles dialect, slang, proper nouns.
+
+    TODO: wire this to your preferred model client. The scaffold leaves the
+    implementation stubbed so the server can start without an API key.
+    """
+
+    SYSTEM_PROMPT = (
+        "You translate search queries into $primary_lang for $domain_name. "
+        "Preserve proper nouns. Use the site's native slang where appropriate. "
+        "Return only the translated query, no commentary."
+    )
+
+    def translate(self, query: str, target: str = "$primary_lang") -> str:
+        # TODO: replace with real LLM call.
+        # from anthropic import Anthropic
+        # client = Anthropic()
+        # resp = client.messages.create(
+        #     model="claude-opus-4-7",
+        #     max_tokens=128,
+        #     system=self.SYSTEM_PROMPT,
+        #     messages=[{"role": "user", "content": query}],
+        # )
+        # return resp.content[0].text.strip()
+        raise NotImplementedError(
+            "LLMTranslator.translate is a stub. Wire a model client or "
+            "switch TRANSLATOR to IdentityTranslator / DictionaryTranslator."
+        )
+
+
+# Selected at scaffold time.
+# <<IF translator=identity>>
+TRANSLATOR: Translator = IdentityTranslator()
+# <<ENDIF>>
+# <<IF translator=dictionary>>
+TRANSLATOR: Translator = DictionaryTranslator()
+# <<ENDIF>>
+# <<IF translator=llm>>
+TRANSLATOR: Translator = LLMTranslator()
+# <<ENDIF>>
+
+
+def translate(query: str, target: str = "$primary_lang") -> str:
+    """Top-level entrypoint used by server.py."""
+    return TRANSLATOR.translate(query, target)

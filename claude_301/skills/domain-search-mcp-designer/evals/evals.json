@@ -1,0 +1,52 @@
+{
+  "skill_name": "domain-search-mcp-designer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Scaffold an MCP server for Xiaohongshu POI search in LA. I want to find late-night ramen spots. Use Playwright MCP for the browser.",
+      "expected_output": "A FastMCP server scaffold under ./xhs-search/ with translator stub (EN→ZH), Playwright backend wiring, scratchpad init, and writeback with Sources section.",
+      "files": [],
+      "expectations": [
+        "Generated src/<pkg>/server.py imports the playwright-backed browser bridge (the claude_in_chrome branch is not present)",
+        "Generated src/<pkg>/translator.py targets zh and uses the llm or dictionary TRANSLATOR stub (not identity)",
+        "Generated src/<pkg>/scratchpad.py creates .search-scratchpad/<qhash>/ with a meta.json that matches ScratchpadMeta",
+        "Generated src/<pkg>/writeback.py emits a '## Sources' markdown section with [title](url) hyperlinks per claim",
+        "Generated README.md lists a 'Credential storage strategy' TODO item",
+        "Generated src/<pkg>/schemas.py defines a Pydantic SearchResult with title and url fields",
+        "Running python scripts/validate_scaffold.py on the generated dir exits 0",
+        "Generated pyproject.toml includes playwright in dependencies",
+        "Skill did NOT write any login, password, or cookie-capture code",
+        "grep -r '<<IF' on the generated tree returns zero matches (no leaked conditional markers)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I want an MCP server wrapping Dianping restaurant reviews, but my corp proxy blocks Playwright installs. What's my option?",
+      "expected_output": "Skill proposes Claude-in-Chrome MCP fallback, explains the auth/isolation tradeoff, scaffolds with claude_in_chrome backend.",
+      "files": [],
+      "expectations": [
+        "Assistant surfaces the Playwright-vs-Claude-in-Chrome tradeoff before scaffolding (e.g., mentions the tradeoff doc or prints a comparison)",
+        "Generated src/<pkg>/server.py uses the claude_in_chrome backend branch (BACKEND constant is 'claude_in_chrome')",
+        "Generated pyproject.toml does NOT include playwright as a dependency",
+        "Generated README.md includes an explicit 'uses your already-logged-in Chrome' warning",
+        "Generated src/<pkg>/translator.py targets zh",
+        "Skill does NOT attempt to write login or credential-capture code",
+        "Running python scripts/validate_scaffold.py on the generated dir exits 0"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Build an MCP search server for LinkedIn people search in English. No translation needed.",
+      "expected_output": "Scaffold with identity translator, English primary language, attribution enforcement still in place.",
+      "files": [],
+      "expectations": [
+        "Generated src/<pkg>/translator.py selects the IdentityTranslator",
+        "Generated src/<pkg>/writeback.py still emits a '## Sources' section even with no translation",
+        "Generated src/<pkg>/scratchpad.py is identical in layout to the ZH case (directory structure is backend-agnostic)",
+        "Generated README.md includes a rate-limit TODO (LinkedIn has aggressive anti-scraping)",
+        "Generated src/<pkg>/server.py has BACKEND set and SEARCH_RATE_LIMIT_PER_MINUTE constant",
+        "Running python scripts/validate_scaffold.py on the generated dir exits 0"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+# $domain_name Search MCP
+
+FastMCP server wrapping $domain_name's authenticated search. Browser
+automation delegated to **$browser_backend**. Upstream English queries are
+translated to **$primary_lang** before hitting the site.
+
+## Install
+
+```
+uv pip install -e .
+# <<IF browser=playwright>>
+playwright install chromium
+# <<ENDIF>>
+```
+
+## Run
+
+```
+python -m $server_pkg.server
+```
+
+## Register with your MCP client
+
+Copy the block from `mcp_config.json` into your Claude Code or Claude
+Desktop MCP config. Restart the client. The `search`, `fetch_detail`, and
+`summarize_to_file` tools will appear under the `$server_pkg` server.
+
+## Scratchpad
+
+Every call to `search` creates `.search-scratchpad/<qhash>/meta.json`.
+Each source summarized via `summarize_to_file` lands in the same
+directory as `NNN-<host>.md`. The writeback step reads these back into a
+single attribution-preserving report.
+
+To prune old queries:
+
+```python
+from $server_pkg.scratchpad import gc
+gc()  # default: remove entries older than 7 days
+```
+
+## Browser backend notes
+
+# <<IF browser=playwright>>
+**Playwright** (selected). Clean slate, reproducible, but requires you to
+produce a `storage_state.json` via `playwright codegen` and keep it
+refreshed as cookies expire.
+# <<ENDIF>>
+# <<IF browser=claude_in_chrome>>
+**Claude-in-Chrome** (selected). Uses your already-logged-in Chrome
+session — more cookies, wider access, **looser isolation**. Every site
+you are logged into is reachable by this server. Read
+`docs/playwright-vs-claude-in-chrome.md` (or the skill's reference doc)
+before production use.
+# <<ENDIF>>
+
+## TODO checklist (before production)
+
+- [ ] **Credential storage strategy.** Cookies expire; pick a refresh
+  plan. See the skill's `references/playwright-vs-claude-in-chrome.md`.
+- [ ] **Tune the translator** (`src/$server_pkg/translator.py`) —
+  replace the stub with domain-appropriate logic.
+- [ ] **Implement `_browser_search`** in `src/$server_pkg/server.py` —
+  the selectors are domain-specific and the scaffold leaves them as
+  `NotImplementedError`.
+- [ ] **Implement `fetch_detail`** — same story.
+- [ ] **Set rate-limit policy** in `server.py:SEARCH_RATE_LIMIT_PER_MINUTE`.
+- [ ] **Register the server** in your MCP client (see `mcp_config.json`).
+- [ ] **Run `python -m $server_pkg` smoke test** before wiring upstream
+  agents.
+
+## Attribution guarantees
+
+- Every `search` result is a Pydantic `SearchResult` with `title` + `url`.
+- The writeback tool always emits a `## Sources` section — this is
+  non-negotiable and mirrors Claude Code's `WebSearchTool` requirement.
+- Verbatim excerpts ≥ 15 words that aren't quoted will raise a warning
+  in the aggregate report.

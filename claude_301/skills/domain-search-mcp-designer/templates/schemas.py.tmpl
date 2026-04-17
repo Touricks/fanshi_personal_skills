@@ -1,0 +1,66 @@
+"""Pydantic schemas for $domain_name search results.
+
+Mirrors the Zod output schema in Claude Code's WebSearchTool
+(reference/src/tools/WebSearchTool/WebSearchTool.ts:42-54). Every tool
+that returns search results MUST return SearchResult instances — the
+title+url pair is what makes the writeback tool's Sources section
+reliable.
+"""
+
+from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, Field, HttpUrl
+
+
+class Quotation(BaseModel):
+    """A verbatim excerpt from a source document.
+
+    Excerpts longer than 125 characters should be trimmed or paraphrased
+    (see reference/src/tools/WebFetchTool/prompt.ts:28-34). The `context`
+    field captures the surrounding paraphrase so the writeback tool can
+    distinguish direct quotes from summary.
+    """
+
+    text: str = Field(..., description="Verbatim excerpt from the source")
+    context: Optional[str] = Field(
+        None, description="Paraphrased surrounding context"
+    )
+
+
+class SearchResult(BaseModel):
+    """One hit from $domain_name search.
+
+    The upstream query may be in English; `source_language` records the
+    language the title and snippet are actually in (usually $primary_lang).
+    """
+
+    title: str = Field(..., description="Display title of the result")
+    url: HttpUrl = Field(..., description="Canonical URL for the result")
+    snippet: str = Field("", description="Short description/excerpt")
+    source_language: str = Field(
+        "$primary_lang", description="ISO-639-1 code of title/snippet"
+    )
+    retrieved_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class DetailResult(BaseModel):
+    """A fetched detail page with full body and extracted quotations."""
+
+    url: HttpUrl
+    title: str
+    body: str
+    quotations: List[Quotation] = Field(default_factory=list)
+    retrieved_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ScratchpadMeta(BaseModel):
+    """Contents of .search-scratchpad/<qhash>/meta.json."""
+
+    query: str = Field(..., description="Original upstream query (likely EN)")
+    translated_query: str = Field(
+        ..., description="Query after translation to $primary_lang"
+    )
+    query_hash: str = Field(..., description="sha1(query)[:10]")
+    backend: str = Field(..., description="playwright | claude_in_chrome")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
