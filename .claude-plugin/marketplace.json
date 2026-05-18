@@ -38,6 +38,21 @@
       "name": "claude_301",
       "description": "Claude 301 exam preparation skills: study content generation, review management, and skill scaffolding.",
       "source": "./claude_301"
+    },
+    {
+      "name": "sde_mattpocock",
+      "description": "Matt Pocock's engineering skills for real software development: disciplined diagnosis, TDD, plan grilling, issue/PRD generation, triage, architecture deepening, plus productivity tools.",
+      "source": "./sde_mattpocock"
+    },
+    {
+      "name": "frontend_taste",
+      "description": "Anti-slop frontend design framework: premium UI output skills (all-rounder, soft, minimalist, brutalist, GPT/Codex), redesign, image-to-code, reference-image generation, and output enforcement.",
+      "source": "./frontend_taste"
+    },
+    {
+      "name": "web-access",
+      "description": "Complete web browsing and automation: intelligent tool selection, CDP browser automation against the user's real logged-in browser, and per-site experience accumulation.",
+      "source": "./web-access"
     }
   ]
 }

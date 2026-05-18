@@ -1,0 +1,12 @@
+{
+  "name": "web-access",
+  "description": "Complete web browsing and automation: intelligent tool selection (WebSearch/WebFetch/curl/CDP), CDP browser automation against the user's real logged-in browser, and per-site experience accumulation.",
+  "version": "2.5.3",
+  "author": {
+    "name": "一泽 Eze"
+  },
+  "homepage": "https://github.com/eze-is/web-access",
+  "repository": "https://github.com/eze-is/web-access",
+  "license": "MIT",
+  "keywords": ["web", "browser", "cdp", "automation", "search"]
+}
