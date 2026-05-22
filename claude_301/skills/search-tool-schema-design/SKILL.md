@@ -1,29 +1,17 @@
 ---
 name: search-tool-schema-design
 description: >
-  Guide for designing input and output JSON Schemas for search-type tools —
-  tools that query the web, a database, a codebase index, a vector store, or
-  any external retrieval service. Covers: when to mark fields required vs
-  optional vs nullable (and why too many required fields causes hallucinations);
-  how to represent empty results, missing per-record metadata, and truncated
-  result sets; two competing pagination/truncation patterns (semantic
-  `appliedLimit` that appears only on truncation vs a simple boolean
-  `truncated` flag); `z.union()` for heterogeneous results and
-  `discriminatedUnion` for multi-operation search tools; the
-  `enum + "other" + detail` and `enum + "unclear"` patterns for open-ended
-  categorical fields (and why the two are not the same); and HTTP metadata
-  fields for tools that fetch remote resources. Use this skill whenever the
-  user is designing, reviewing, or refactoring a tool that returns search
-  results — even if they don't say the word "schema". Trigger on phrases
-  like: "designing a search tool", "database search tool", "web search tool",
-  "output schema for search", "schema for a retrieval tool", "pagination in
-  tool output", "how to signal truncation", "how to return no results",
-  "required vs optional fields", "nullable fields", "when to use enum
-  'other'", "`unclear` enum", "my search tool hallucinates missing fields",
-  "tool result schema for Notion/Postgres/Elasticsearch/vector search", or
-  "discriminated union for multi-mode search". For general tool-description
-  writing and tool-splitting, see `mcp-tool-design`. For error-response
-  shapes, see `mcp-error-response`.
+  Design input and output JSON Schemas for search or retrieval tools that query
+  the web, databases, code indexes, vector stores, or external services. Use
+  when designing, reviewing, or refactoring a search-result tool, even if the
+  user does not say "schema". Covers required vs optional/nullable fields, empty
+  results, missing metadata, truncation/pagination (`appliedLimit` vs
+  `truncated`), heterogeneous results (`z.union` and discriminated unions), enum
+  `other` vs `unclear`, and HTTP metadata. Trigger on "search tool",
+  "database/web/vector search", "retrieval output schema", "pagination",
+  "truncation", "no results", "nullable fields", "enum other/unclear", or
+  hallucinated missing fields. For general tool description or splitting, use
+  `mcp-tool-design`; for error shapes, use `mcp-error-response`.
 ---
 
 # Search Tool Schema Design

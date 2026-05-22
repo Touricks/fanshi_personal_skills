@@ -1,22 +1,19 @@
 ---
 name: agent-tool-allocation
 description: >
-  Guide for allocating tools to agents and configuring tool_choice in multi-agent
-  systems. Covers the allowlist/blocklist pattern (tools vs disallowedTools),
-  wildcard expansion, multi-layer filtering (filterToolsForAgent), built-in agent
-  tool scoping strategies, ToolSelector bucket categories, tool_choice parameter
-  modes (auto, any, forced selection), and agent schema definition using lazySchema
-  (Zod) and BuiltInAgentDefinition. Use when the user says "agent tool allocation",
-  "tool allocation", "tool_choice", "which tools for which agent", "agent tool
-  scoping", "allowlist blocklist", "filterToolsForAgent", "disallowedTools",
-  "agent definition schema", "lazySchema", "BuiltInAgentDefinition", "tool_choice
-  forced", "ASYNC_AGENT_ALLOWED_TOOLS", "COORDINATOR_MODE_ALLOWED_TOOLS", "agent
-  tool boundaries", or wants to understand how Claude Code decides which tools each
-  agent can access. Also use when designing a new agent and deciding what tools it
-  should have, even if the user doesn't explicitly mention "allocation".
-  For tool description content design, see mcp-tool-design instead.
-  For error response patterns, see mcp-error-response instead.
-  For platform-level MCP optimization, see mcp-tool-enhancement instead.
+  Guide for assigning tools to agents and configuring `tool_choice` in
+  multi-agent systems. Covers allowlists/blocklists (`tools` vs
+  `disallowedTools`), wildcard expansion, `filterToolsForAgent`, built-in agent
+  scoping, ToolSelector buckets, `tool_choice` modes (auto, any, forced), and
+  agent schemas with `lazySchema` and `BuiltInAgentDefinition`. Use when the user
+  says "agent tool allocation", "tool allocation", "tool_choice", "which tools
+  for which agent", "agent tool scoping", "allowlist blocklist",
+  "filterToolsForAgent", "disallowedTools", "lazySchema",
+  "BuiltInAgentDefinition", "ASYNC_AGENT_ALLOWED_TOOLS",
+  "COORDINATOR_MODE_ALLOWED_TOOLS", or "agent tool boundaries"; also use when
+  designing a new agent's tool access. For tool descriptions use
+  `mcp-tool-design`; for errors use `mcp-error-response`; for MCP optimization
+  use `mcp-tool-enhancement`.
 ---
 
 # Agent Tool Allocation: Boundaries, Scoping, and tool_choice
